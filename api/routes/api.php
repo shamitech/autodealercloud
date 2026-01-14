@@ -67,8 +67,8 @@ Route::get('/platform-test', function () {
     return ['message' => 'Platform test OK'];
 });
 
-// Tenant validation (public, no auth required, CORS enabled)
-Route::get('tenant/check', [TenantValidationController::class, 'checkExists'])->middleware('cors');
+// Tenant validation (public, no auth required)
+Route::get('tenant/check', [TenantValidationController::class, 'checkExists']);
 
 // Password reset routes (public, no auth required)
 Route::prefix('password')->group(function () {
