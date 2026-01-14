@@ -22,8 +22,8 @@ return [
     'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:3000')],
 
     'allowed_origins_patterns' => [
-        '^https?:\/\/.*\.autodealercloud\.(com|net)$',
-        '^http:\/\/.*\.localhost$'
+        '/^https?:\/\/.*\.autodealercloud\.(com|net)$/',
+        '/^http:\/\/.*\.localhost$/'
     ],
 
     'allowed_headers' => ['*'],
