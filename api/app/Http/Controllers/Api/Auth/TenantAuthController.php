@@ -105,20 +105,6 @@ class TenantAuthController extends Controller
     public function platformLogin(Request $request)
     {
         try {
-            // Debug - log what we receive
-            $rawBody = file_get_contents('php://input');
-            \Log::info('Platform login request - DETAILED', [
-                'method' => $request->method(),
-                'content_type' => $request->header('Content-Type'),
-                'content_length' => $request->header('Content-Length'),
-                'server_content_length' => $_SERVER['CONTENT_LENGTH'] ?? 'missing',
-                'raw_body' => $rawBody,
-                'raw_body_length' => strlen($rawBody),
-                'all' => $request->all(),
-                'json' => $request->json()->all(),
-                'input' => $request->input(),
-            ]);
-
             $validated = $request->validate([
                 'email' => 'required|email',
                 'password' => 'required',
