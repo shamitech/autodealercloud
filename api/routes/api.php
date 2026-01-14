@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\DomainController;
 use App\Http\Controllers\Api\TenantController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -39,4 +40,8 @@ Route::middleware(['identify-tenant'])->group(function () {
     Route::get('/tenant/current', [TenantController::class, 'current']);
     Route::apiResource('domains', DomainController::class);
     Route::post('domains/{domain}/verify', [DomainController::class, 'verify']);
+    
+    // User management routes
+    Route::apiResource('users', UserController::class);
+    Route::post('users/{user}/record-login', [UserController::class, 'recordLogin']);
 });
