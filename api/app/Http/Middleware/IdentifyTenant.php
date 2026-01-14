@@ -17,8 +17,14 @@ class IdentifyTenant
      */
     public function handle(Request $request, Closure $next)
     {
-        // Allow tenant/check endpoint without tenant validation (it checks if tenant exists)
-        if ($request->is('api/tenant/check')) {
+        // Allow public endpoints without full tenant validation
+        if ($request->is('api/tenant/check', 'api/auth/register', 'api/auth/login', 'api/password/*')) {
+            // For these endpoints, still try to resolve tenant but don't fail if not found
+            $tenant = $this->resolveTenant($request);
+            if ($tenant) {
+                $request->attributes->set('tenant', $tenant);
+                config(['app.tenant_id' => $tenant->id]);
+            }
             return $next($request);
         }
 
