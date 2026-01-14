@@ -3,6 +3,8 @@ import { useAuthStore } from '@/stores/auth'
 
 // Views
 import LoginView from '@/views/LoginView.vue'
+import ResetPasswordView from '@/views/ResetPasswordView.vue'
+import ForgotPasswordView from '@/views/ForgotPasswordView.vue'
 import DashboardView from '@/views/DashboardView.vue'
 import PlatformDashboardView from '@/views/PlatformDashboardView.vue'
 import TenantsView from '@/views/TenantsView.vue'
@@ -17,6 +19,18 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: LoginView,
+    meta: { public: true },
+  },
+  {
+    path: '/reset-password',
+    name: 'ResetPassword',
+    component: ResetPasswordView,
+    meta: { public: true },
+  },
+  {
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    component: ForgotPasswordView,
     meta: { public: true },
   },
   {

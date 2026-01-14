@@ -49,6 +49,13 @@
           {{ authStore.isLoading ? 'Logging in...' : 'Login' }}
         </button>
       </form>
+
+      <!-- Forgot password link -->
+      <div class="mt-4 text-center">
+        <router-link to="/forgot-password" class="text-sm text-blue-600 hover:text-blue-700">
+          Forgot your password?
+        </router-link>
+      </div>
     </div>
   </div>
 </template>
