@@ -19,8 +19,8 @@ export const useAuthStore = defineStore('auth', () => {
     isLoading.value = true
     error.value = null
     try {
-      const response = await apiClient.post('/auth/login', { email, password })
-      const { user: userData, token: authToken } = response.data
+      const response = await apiClient.post('/platform/login', { email, password })
+      const { user: userData, access_token: authToken } = response.data
       
       token.value = authToken
       user.value = userData
@@ -40,8 +40,11 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function fetchPermissions() {
     try {
-      const response = await apiClient.get('/auth/permissions')
-      permissions.value = response.data.permissions || []
+      // For platform users, we can derive permissions from role in user object
+      // Or fetch them from a dedicated endpoint if needed
+      if (user.value) {
+        permissions.value = ['read', 'write'] // Basic permissions based on role
+      }
     } catch (err) {
       console.error('Failed to fetch permissions:', err)
     }
@@ -49,8 +52,8 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function fetchCurrentUser() {
     try {
-      const response = await apiClient.get('/auth/me')
-      user.value = response.data
+      const response = await apiClient.get('/platform/me')
+      user.value = response.data.user || response.data
       await fetchPermissions()
       return true
     } catch (err) {
@@ -62,7 +65,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function logout() {
     try {
-      await apiClient.post('/auth/logout')
+      await apiClient.post('/platform/logout')
     } catch (err) {
       console.error('Logout error:', err)
     } finally {

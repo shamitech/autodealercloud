@@ -32,6 +32,13 @@ Route::middleware(['identify-tenant'])->get('/tenant', function (Request $reques
     ]);
 });
 
+// Platform auth routes (for dashboard - no tenant context required)
+Route::prefix('platform')->group(function () {
+    Route::post('login', [TenantAuthController::class, 'platformLogin']);
+    Route::post('logout', [TenantAuthController::class, 'platformLogout'])->middleware('auth:sanctum');
+    Route::get('me', [TenantAuthController::class, 'me'])->middleware('auth:sanctum');
+});
+
 // Admin routes for tenant management
 Route::prefix('admin')->group(function () {
     Route::apiResource('tenants', TenantController::class);

@@ -100,9 +100,48 @@ class TenantAuthController extends Controller
     }
 
     /**
+     * Handle platform user login (for dashboard - no tenant context)
+     */
+    public function platformLogin(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        $user = User::where('email', $validated['email'])->first();
+
+        if (!$user || !Hash::check($validated['password'], $user->password)) {
+            return response()->json([
+                'error' => 'The provided credentials are invalid.',
+            ], 401);
+        }
+
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'access_token' => $token,
+            'user' => $user,
+            'tenant' => $user->tenant, // Include tenant info
+        ]);
+    }
+
+    /**
      * Handle tenant user logout
      */
     public function logout(Request $request)
+    {
+        $request->user()?->currentAccessToken()?->delete();
+
+        return response()->json([
+            'message' => 'Logged out successfully',
+        ]);
+    }
+
+    /**
+     * Handle platform user logout
+     */
+    public function platformLogout(Request $request)
     {
         $request->user()?->currentAccessToken()?->delete();
 
