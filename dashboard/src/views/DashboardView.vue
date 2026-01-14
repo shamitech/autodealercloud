@@ -1,5 +1,14 @@
 <template>
   <div>
+    <!-- Platform Admin Dashboard Redirect -->
+    <div v-if="authStore.isPlatformAdmin" class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+      <h2 class="text-xl font-semibold text-blue-900 mb-2">👋 Platform Administrator</h2>
+      <p class="text-blue-700 mb-4">Welcome to the platform admin dashboard. Use the navigation menu to manage tenants, domains, and system settings.</p>
+      <router-link to="/platform" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+        Go to Platform Dashboard →
+      </router-link>
+    </div>
+
     <h1 class="text-3xl font-bold text-gray-800 mb-8">Dashboard</h1>
 
     <!-- Stats Grid -->

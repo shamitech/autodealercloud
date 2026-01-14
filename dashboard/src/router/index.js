@@ -23,7 +23,7 @@ const routes = [
     path: '/',
     name: 'Dashboard',
     component: DashboardView,
-    meta: { requiresAuth: true, roles: ['user'] },
+    meta: { requiresAuth: true },
   },
   {
     path: '/platform',
@@ -88,11 +88,18 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 
-  // Public routes
+  // Public routes - allow unauthenticated access
   if (to.meta.public) {
     if (authStore.isAuthenticated) {
-      next('/')
+      // Redirect authenticated users away from login
+      // Platform admins go to /platform, others to /
+      if (authStore.isPlatformAdmin) {
+        next('/platform')
+      } else {
+        next('/')
+      }
     } else {
+      // Allow public access to public routes
       next()
     }
     return
@@ -111,7 +118,12 @@ router.beforeEach(async (to, from, next) => {
         (role) => authStore.user?.role === role
       )
       if (!hasRequiredRole) {
-        next('/') // Redirect to dashboard if no required role
+        // Redirect to appropriate dashboard based on role
+        if (authStore.isPlatformAdmin) {
+          next('/platform')
+        } else {
+          next('/')
+        }
         return
       }
     }
