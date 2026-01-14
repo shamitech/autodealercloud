@@ -34,23 +34,19 @@ export async function validateTenant(subdomain) {
   }
 
   try {
-    // Try to make an API call with tenant context
-    // If tenant exists, API will return data; if not, will return 404
-    const response = await fetch(`https://api.autodealercloud.com/api/tenant/current`, {
-      headers: {
-        'Host': `${subdomain}.autodealercloud.com`,
-      },
-    })
+    // Call the validation endpoint - returns {exists: true/false}
+    const response = await fetch(`https://api.autodealercloud.com/api/tenant/check?subdomain=${subdomain}`)
     
-    // If we get a 404, tenant doesn't exist
-    if (response.status === 404) {
-      return false
+    if (!response.ok) {
+      // If API is down, fail open (allow access)
+      return true
     }
     
-    return true
+    const data = await response.json()
+    return data.exists === true
   } catch (error) {
     console.error('Failed to validate tenant:', error)
-    // On network error, allow access (fail open)
+    // On network error, fail open (allow access)
     return true
   }
 }

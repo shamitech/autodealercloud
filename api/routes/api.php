@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\DomainController;
 use App\Http\Controllers\Api\LightspeedController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\TenantController;
+use App\Http\Controllers\Api\TenantValidationController;
 use App\Http\Controllers\Api\UserController;
 use App\Models\Tenant;
 use Illuminate\Http\Request;
@@ -65,6 +66,9 @@ Route::middleware('auth:sanctum')->get('domains', [DomainController::class, 'ind
 Route::get('/platform-test', function () {
     return ['message' => 'Platform test OK'];
 });
+
+// Tenant validation (public, no auth required)
+Route::get('tenant/check', [TenantValidationController::class, 'checkExists']);
 
 // Password reset routes (public, no auth required)
 Route::prefix('password')->group(function () {
