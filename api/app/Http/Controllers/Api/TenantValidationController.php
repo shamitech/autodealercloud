@@ -10,7 +10,7 @@ class TenantValidationController extends Controller
 {
     /**
      * Check if a tenant exists by subdomain (public endpoint, no auth required)
-     * Always queries fresh from database to handle newly-created tenants
+     * Uses fresh query builder to ensure we always read from database
      */
     public function checkExists(Request $request)
     {
@@ -20,10 +20,10 @@ class TenantValidationController extends Controller
             return response()->json(['exists' => false], 400);
         }
 
-        // Use withoutCache() to bypass any Laravel query result caching
-        $tenant = Tenant::where('slug', $subdomain)
+        // Query fresh from DB without any caching layers
+        $tenant = Tenant::query()
+            ->where('slug', $subdomain)
             ->where('status', 'active')
-            ->withoutCache()
             ->first();
 
         return response()->json([
