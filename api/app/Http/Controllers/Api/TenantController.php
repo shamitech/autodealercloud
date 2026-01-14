@@ -37,8 +37,11 @@ class TenantController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
-            'subdomain' => 'required|string|max:50|unique:tenants,domain',
+            'subdomain' => 'required|string|max:50|regex:/^[a-z0-9-]+$/|unique:tenants,slug',
             'plan' => 'nullable|string|in:starter,professional,enterprise',
+        ], [
+            'subdomain.unique' => 'This subdomain is already taken. Please choose another.',
+            'subdomain.regex' => 'Subdomain can only contain lowercase letters, numbers, and hyphens.',
         ]);
 
         // Create tenant with domain based on subdomain

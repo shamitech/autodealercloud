@@ -57,6 +57,9 @@ Route::prefix('platform')->group(function () {
     });
 });
 
+// Direct domains endpoint (falls back to all domains if no tenant context)
+Route::middleware('auth:sanctum')->get('domains', [DomainController::class, 'index']);
+
 // Test route (no middleware)
 Route::get('/platform-test', function () {
     return ['message' => 'Platform test OK'];
