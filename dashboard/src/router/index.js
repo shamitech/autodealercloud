@@ -1,10 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { getCurrentSubdomain, validateTenant } from '@/utils/tenant'
 
 // Views
 import LoginView from '@/views/LoginView.vue'
 import ResetPasswordView from '@/views/ResetPasswordView.vue'
 import ForgotPasswordView from '@/views/ForgotPasswordView.vue'
+import NotFoundView from '@/views/NotFoundView.vue'
 import DashboardView from '@/views/DashboardView.vue'
 import PlatformDashboardView from '@/views/PlatformDashboardView.vue'
 import TenantsView from '@/views/TenantsView.vue'
@@ -32,6 +34,12 @@ const routes = [
     name: 'ForgotPassword',
     component: ForgotPasswordView,
     meta: { public: true },
+  },
+  {
+    path: '/not-found',
+    name: 'NotFound',
+    component: NotFoundView,
+    meta: { public: true, skipTenantValidation: true },
   },
   {
     path: '/',
@@ -91,6 +99,16 @@ const router = createRouter({
 // Navigation guard
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
+  const subdomain = getCurrentSubdomain()
+
+  // Check if we're on a tenant subdomain and validate it exists
+  if (subdomain && !to.meta.skipTenantValidation) {
+    const isTenantValid = await validateTenant(subdomain)
+    if (!isTenantValid) {
+      next('/not-found')
+      return
+    }
+  }
 
   // Check if user is logged in
   if (!authStore.isAuthenticated && authStore.token) {
