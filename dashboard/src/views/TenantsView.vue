@@ -162,10 +162,14 @@ const saveTenant = async () => {
     }
     showCreateModal.value = false
     editingTenant.value = null
+    formData.value = { name: '', email: '', subdomain: '', plan: 'starter' }
     await fetchTenants() // Refresh list
   } catch (err) {
     console.error('Error saving tenant:', err)
-    alert(err.response?.data?.message || 'Error saving tenant')
+    const errorMessage = err.response?.data?.errors 
+      ? Object.values(err.response.data.errors).flat().join(', ')
+      : err.response?.data?.message || 'Error saving tenant'
+    alert(errorMessage)
   }
 }
 
