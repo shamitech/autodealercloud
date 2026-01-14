@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Models\User;
+use App\Services\AuthorizationService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -124,6 +125,24 @@ class TenantAuthController extends Controller
 
         return response()->json([
             'user' => $user,
+        ]);
+    }
+
+    /**
+     * Get user permissions
+     */
+    public function permissions(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        return response()->json([
+            'role' => $user->role,
+            'role_description' => AuthorizationService::getRoleDescription($user->role),
+            'permissions' => AuthorizationService::getPermissions($user),
         ]);
     }
 }

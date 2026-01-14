@@ -43,23 +43,34 @@ Route::middleware(['identify-tenant'])->prefix('auth')->group(function () {
     Route::post('login', [TenantAuthController::class, 'login']);
     Route::post('logout', [TenantAuthController::class, 'logout'])->middleware('auth:sanctum');
     Route::get('me', [TenantAuthController::class, 'me'])->middleware('auth:sanctum');
+    Route::get('permissions', [TenantAuthController::class, 'permissions'])->middleware('auth:sanctum');
 });
 
 // Tenant routes (require tenant context)
 Route::middleware(['identify-tenant'])->group(function () {
-    Route::get('/tenant/current', [TenantController::class, 'current']);
-    Route::apiResource('domains', DomainController::class);
-    Route::post('domains/{domain}/verify', [DomainController::class, 'verify']);
+    Route::get('/tenant/current', [TenantController::class, 'current'])->middleware('auth:sanctum');
     
-    // User management routes
-    Route::apiResource('users', UserController::class);
-    Route::post('users/{user}/record-login', [UserController::class, 'recordLogin']);
+    // Domain management - Admin only
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::apiResource('domains', DomainController::class, ['only' => ['index', 'store', 'show', 'update', 'destroy']]);
+        Route::post('domains/{domain}/verify', [DomainController::class, 'verify']);
+    });
+    
+    // User management - Admin only
+    Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+        Route::get('users', [UserController::class, 'index']);
+        Route::post('users', [UserController::class, 'store']);
+        Route::get('users/{user}', [UserController::class, 'show']);
+        Route::put('users/{user}', [UserController::class, 'update']);
+        Route::delete('users/{user}', [UserController::class, 'destroy']);
+        Route::post('users/{user}/record-login', [UserController::class, 'recordLogin']);
+    });
     
     // Lightspeed integration routes
     Route::post('lightspeed/connect', [LightspeedController::class, 'connect'])->middleware('auth:sanctum');
     Route::get('lightspeed/status', [LightspeedController::class, 'status'])->middleware('auth:sanctum');
-    Route::post('lightspeed/sync-products', [LightspeedController::class, 'syncProducts'])->middleware('auth:sanctum');
-    Route::get('lightspeed/products', [LightspeedController::class, 'products']);
-    Route::get('lightspeed/products/{product}', [LightspeedController::class, 'show']);
+    Route::post('lightspeed/sync-products', [LightspeedController::class, 'syncProducts'])->middleware(['auth:sanctum', 'role:admin|editor']);
+    Route::get('lightspeed/products', [LightspeedController::class, 'products'])->middleware('auth:sanctum');
+    Route::get('lightspeed/products/{product}', [LightspeedController::class, 'show'])->middleware('auth:sanctum');
     Route::post('lightspeed/disconnect', [LightspeedController::class, 'disconnect'])->middleware('auth:sanctum');
 });
