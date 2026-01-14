@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Auth\TenantAuthController;
 use App\Http\Controllers\Api\DomainController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\UserController;
@@ -33,6 +34,14 @@ Route::middleware(['identify-tenant'])->get('/tenant', function (Request $reques
 // Admin routes for tenant management
 Route::prefix('admin')->group(function () {
     Route::apiResource('tenants', TenantController::class);
+});
+
+// Tenant auth routes (public)
+Route::middleware(['identify-tenant'])->prefix('auth')->group(function () {
+    Route::post('register', [TenantAuthController::class, 'register']);
+    Route::post('login', [TenantAuthController::class, 'login']);
+    Route::post('logout', [TenantAuthController::class, 'logout'])->middleware('auth:sanctum');
+    Route::get('me', [TenantAuthController::class, 'me'])->middleware('auth:sanctum');
 });
 
 // Tenant routes (require tenant context)
