@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\DomainController;
+use App\Http\Controllers\Api\TenantController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -25,4 +27,16 @@ Route::middleware(['identify-tenant'])->get('/tenant', function (Request $reques
         'tenant' => $tenant,
         'tenant_id_from_config' => config('app.tenant_id'),
     ]);
+});
+
+// Admin routes for tenant management
+Route::prefix('admin')->group(function () {
+    Route::apiResource('tenants', TenantController::class);
+});
+
+// Tenant routes (require tenant context)
+Route::middleware(['identify-tenant'])->group(function () {
+    Route::get('/tenant/current', [TenantController::class, 'current']);
+    Route::apiResource('domains', DomainController::class);
+    Route::post('domains/{domain}/verify', [DomainController::class, 'verify']);
 });
