@@ -27,6 +27,9 @@ class User extends Authenticatable
         'phone',
         'bio',
         'is_active',
+        'lightspeed_api_key',
+        'lightspeed_api_secret',
+        'lightspeed_account_id',
     ];
 
     /**
@@ -47,6 +50,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'last_login_at' => 'datetime',
+        'lightspeed_connected_at' => 'datetime',
         'is_active' => 'boolean',
     ];
 }

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Auth\TenantAuthController;
 use App\Http\Controllers\Api\DomainController;
+use App\Http\Controllers\Api\LightspeedController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
@@ -53,4 +54,12 @@ Route::middleware(['identify-tenant'])->group(function () {
     // User management routes
     Route::apiResource('users', UserController::class);
     Route::post('users/{user}/record-login', [UserController::class, 'recordLogin']);
+    
+    // Lightspeed integration routes
+    Route::post('lightspeed/connect', [LightspeedController::class, 'connect'])->middleware('auth:sanctum');
+    Route::get('lightspeed/status', [LightspeedController::class, 'status'])->middleware('auth:sanctum');
+    Route::post('lightspeed/sync-products', [LightspeedController::class, 'syncProducts'])->middleware('auth:sanctum');
+    Route::get('lightspeed/products', [LightspeedController::class, 'products']);
+    Route::get('lightspeed/products/{product}', [LightspeedController::class, 'show']);
+    Route::post('lightspeed/disconnect', [LightspeedController::class, 'disconnect'])->middleware('auth:sanctum');
 });
