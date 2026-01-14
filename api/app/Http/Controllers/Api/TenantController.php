@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Mail\PasswordResetMail;
+use App\Models\PasswordResetToken;
 use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class TenantController extends Controller
@@ -55,8 +58,8 @@ class TenantController extends Controller
 
         $tenant = Tenant::create($tenantData);
 
-        // Create a user for this tenant with admin role
-        $tenant->users()->create([
+        // Create a user for this tenant with admin role (with random temporary password)
+        $adminUser = $tenant->users()->create([
             'name' => $validated['name'] . ' Admin',
             'email' => $validated['email'],
             'password' => bcrypt(Str::random(16)),
@@ -64,9 +67,15 @@ class TenantController extends Controller
             'is_active' => true,
         ]);
 
+        // Generate password reset token and send email
+        $resetToken = PasswordResetToken::generateToken($adminUser->id);
+        $resetUrl = "https://{$validated['subdomain']}.autodealercloud.com/reset-password?token={$resetToken}";
+
+        Mail::to($adminUser->email)->send(new PasswordResetMail($adminUser, $resetToken, $resetUrl));
+
         return response()->json([
             'data' => $tenant,
-            'message' => 'Tenant created successfully',
+            'message' => 'Tenant created successfully. Password reset link sent to admin email.',
         ], 201);
     }
 

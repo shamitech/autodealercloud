@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Auth\TenantAuthController;
 use App\Http\Controllers\Api\DomainController;
 use App\Http\Controllers\Api\LightspeedController;
+use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\UserController;
 use App\Models\Tenant;
@@ -63,6 +64,12 @@ Route::middleware('auth:sanctum')->get('domains', [DomainController::class, 'ind
 // Test route (no middleware)
 Route::get('/platform-test', function () {
     return ['message' => 'Platform test OK'];
+});
+
+// Password reset routes (public, no auth required)
+Route::prefix('password')->group(function () {
+    Route::post('request-reset', [PasswordResetController::class, 'requestReset']);
+    Route::post('reset', [PasswordResetController::class, 'resetPassword']);
 });
 
 // Admin routes for tenant management
