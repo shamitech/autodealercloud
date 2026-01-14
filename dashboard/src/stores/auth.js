@@ -10,6 +10,8 @@ export const useAuthStore = defineStore('auth', () => {
   const error = ref(null)
 
   const isAuthenticated = computed(() => !!token.value && !!user.value)
+  const isPlatformAdmin = computed(() => ['superadmin', 'admin'].includes(user.value?.role))
+  const isDealerAdmin = computed(() => user.value?.role === 'user')
 
   const canAccess = (permission) => {
     return permissions.value.includes(permission)
@@ -83,6 +85,8 @@ export const useAuthStore = defineStore('auth', () => {
     isLoading,
     error,
     isAuthenticated,
+    isPlatformAdmin,
+    isDealerAdmin,
     canAccess,
     login,
     fetchPermissions,

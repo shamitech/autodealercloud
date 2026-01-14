@@ -4,6 +4,8 @@ import { useAuthStore } from '@/stores/auth'
 // Views
 import LoginView from '@/views/LoginView.vue'
 import DashboardView from '@/views/DashboardView.vue'
+import PlatformDashboardView from '@/views/PlatformDashboardView.vue'
+import TenantsView from '@/views/TenantsView.vue'
 import UsersView from '@/views/UsersView.vue'
 import DomainsView from '@/views/DomainsView.vue'
 import ProductsView from '@/views/ProductsView.vue'
@@ -21,19 +23,31 @@ const routes = [
     path: '/',
     name: 'Dashboard',
     component: DashboardView,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, roles: ['user'] },
+  },
+  {
+    path: '/platform',
+    name: 'PlatformDashboard',
+    component: PlatformDashboardView,
+    meta: { requiresAuth: true, roles: ['superadmin', 'admin'] },
+  },
+  {
+    path: '/tenants',
+    name: 'Tenants',
+    component: TenantsView,
+    meta: { requiresAuth: true, roles: ['superadmin', 'admin'] },
   },
   {
     path: '/users',
     name: 'Users',
     component: UsersView,
-    meta: { requiresAuth: true, roles: ['admin'] },
+    meta: { requiresAuth: true, roles: ['admin', 'superadmin'] },
   },
   {
     path: '/domains',
     name: 'Domains',
     component: DomainsView,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, roles: ['superadmin', 'admin'] },
   },
   {
     path: '/products',
@@ -45,7 +59,7 @@ const routes = [
     path: '/lightspeed',
     name: 'Lightspeed',
     component: LightspeedView,
-    meta: { requiresAuth: true, roles: ['admin', 'editor'] },
+    meta: { requiresAuth: true, roles: ['admin', 'editor', 'superadmin'] },
   },
   {
     path: '/profile',

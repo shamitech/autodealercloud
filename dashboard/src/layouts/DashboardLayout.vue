@@ -8,29 +8,51 @@
       </div>
       
       <nav class="flex-1 p-4 space-y-2">
+        <!-- Platform Admin Section -->
+        <template v-if="authStore.isPlatformAdmin">
+          <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase">Platform</div>
+          <router-link
+            to="/platform"
+            class="block px-4 py-2 rounded hover:bg-gray-800 transition"
+            :class="{ 'bg-gray-700': route.name === 'PlatformDashboard' }"
+          >
+            📊 Platform Dashboard
+          </router-link>
+          <router-link
+            to="/tenants"
+            class="block px-4 py-2 rounded hover:bg-gray-800 transition"
+            :class="{ 'bg-gray-700': route.name === 'Tenants' }"
+          >
+            🏢 Manage Tenants
+          </router-link>
+          <router-link
+            to="/users"
+            class="block px-4 py-2 rounded hover:bg-gray-800 transition"
+            :class="{ 'bg-gray-700': route.name === 'Users' }"
+          >
+            👥 Platform Users
+          </router-link>
+          <router-link
+            to="/domains"
+            class="block px-4 py-2 rounded hover:bg-gray-800 transition"
+            :class="{ 'bg-gray-700': route.name === 'Domains' }"
+          >
+            🌐 Domains
+          </router-link>
+          <div class="border-t border-gray-700 my-2"></div>
+        </template>
+
+        <!-- Dealer/Tenant Section -->
+        <template v-if="authStore.isDealerAdmin">
+          <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase">Dashboard</div>
+        </template>
+
         <router-link
           to="/"
           class="block px-4 py-2 rounded hover:bg-gray-800 transition"
           :class="{ 'bg-gray-700': route.name === 'Dashboard' }"
         >
           📊 Dashboard
-        </router-link>
-        
-        <router-link
-          v-if="authStore.user?.role === 'admin'"
-          to="/users"
-          class="block px-4 py-2 rounded hover:bg-gray-800 transition"
-          :class="{ 'bg-gray-700': route.name === 'Users' }"
-        >
-          👥 Users
-        </router-link>
-        
-        <router-link
-          to="/domains"
-          class="block px-4 py-2 rounded hover:bg-gray-800 transition"
-          :class="{ 'bg-gray-700': route.name === 'Domains' }"
-        >
-          🌐 Domains
         </router-link>
         
         <router-link

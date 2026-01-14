@@ -26,8 +26,24 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 // Platform auth routes (for dashboard - no tenant context required)
 Route::prefix('platform')->group(function () {
     Route::post('login', [TenantAuthController::class, 'platformLogin']);
-    Route::post('logout', [TenantAuthController::class, 'platformLogout'])->middleware('auth:sanctum');
-    Route::get('me', [TenantAuthController::class, 'me'])->middleware('auth:sanctum');
+    
+    // Protected platform routes (require authentication)
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('logout', [TenantAuthController::class, 'platformLogout']);
+        Route::get('me', [TenantAuthController::class, 'me']);
+        
+        // Tenant management (platform admin only)
+        Route::apiResource('tenants', TenantController::class);
+        
+        // Stats endpoint
+        Route::get('stats', function () {
+            return response()->json([
+                'total_tenants' => Tenant::count(),
+                'active_tenants' => Tenant::where('status', 'active')->count(),
+                'pending_tenants' => Tenant::where('status', 'pending')->count(),
+            ]);
+        });
+    });
 });
 
 // Test route (no middleware)
