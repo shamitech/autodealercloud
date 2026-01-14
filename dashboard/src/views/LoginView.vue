@@ -22,7 +22,7 @@
             v-model="email"
             type="email"
             required
-            placeholder="admin@dealer1.com"
+            placeholder="your@email.com"
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -49,15 +49,6 @@
           {{ authStore.isLoading ? 'Logging in...' : 'Login' }}
         </button>
       </form>
-
-      <!-- Test Credentials -->
-      <div class="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
-        <p class="text-xs text-gray-600 font-semibold mb-2">TEST CREDENTIALS:</p>
-        <div class="text-xs text-gray-600 space-y-1">
-          <p><strong>Admin:</strong> admin@dealer1.com / password</p>
-          <p><strong>Member:</strong> john@dealer1.com / password</p>
-        </div>
-      </div>
     </div>
   </div>
 </template>
