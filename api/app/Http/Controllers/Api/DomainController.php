@@ -10,14 +10,17 @@ use Illuminate\Routing\Controller;
 class DomainController extends Controller
 {
     /**
-     * Get all domains for a tenant
+     * Get all domains for a tenant or all domains (if no tenant context)
      */
     public function index(Request $request)
     {
         $tenant = $request->attributes->get('tenant');
 
+        // If no tenant context, return all domains (for platform admin)
         if (!$tenant) {
-            return response()->json(['error' => 'No tenant context'], 400);
+            return response()->json([
+                'data' => Domain::all(),
+            ]);
         }
 
         return response()->json([

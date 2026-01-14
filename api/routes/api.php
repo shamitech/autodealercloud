@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\DomainController;
 use App\Http\Controllers\Api\LightspeedController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\UserController;
+use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -43,6 +44,16 @@ Route::prefix('platform')->group(function () {
                 'pending_tenants' => Tenant::where('status', 'pending')->count(),
             ]);
         });
+        
+        // Activity endpoint
+        Route::get('activity', function () {
+            return response()->json([
+                'data' => []
+            ]);
+        });
+        
+        // Platform domains (for system administration)
+        Route::get('domains', [DomainController::class, 'index']);
     });
 });
 

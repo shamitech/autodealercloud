@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Str;
 
 class TenantController extends Controller
 {
@@ -55,7 +56,7 @@ class TenantController extends Controller
         $tenant->users()->create([
             'name' => $validated['name'] . ' Admin',
             'email' => $validated['email'],
-            'password' => bcrypt(str_random(16)),
+            'password' => bcrypt(Str::random(16)),
             'role' => 'admin',
             'is_active' => true,
         ]);
