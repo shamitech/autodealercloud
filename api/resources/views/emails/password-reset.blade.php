@@ -16,7 +16,7 @@
             <h1>Password Reset</h1>
         </div>
         <div class="content">
-            <p>Hi {{ $user->name }},</p>
+            <p>Hi {{ $name }},</p>
             
             <p>We received a request to reset the password for your AutoDealerCloud account. Click the button below to reset your password.</p>
             
