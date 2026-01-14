@@ -26,7 +26,8 @@ export function getCurrentSubdomain() {
 }
 
 /**
- * Validate if tenant exists by checking if API is accessible with tenant context
+ * Validate if tenant exists by checking same-origin API endpoint
+ * Uses the tenant subdomain's own /api endpoint to avoid CORS issues
  */
 export async function validateTenant(subdomain) {
   if (!subdomain) {
@@ -34,19 +35,21 @@ export async function validateTenant(subdomain) {
   }
 
   try {
-    // Call the validation endpoint - returns {exists: true/false}
-    const response = await fetch(`https://api.autodealercloud.com/api/tenant/check?subdomain=${subdomain}`)
+    // Call validation endpoint through same origin (the tenant subdomain itself)
+    // This avoids CORS issues because it's same-origin
+    const response = await fetch(`/api/tenant/check?subdomain=${subdomain}`)
     
     if (!response.ok) {
-      // If API is down, fail open (allow access)
-      return true
+      console.warn(`Tenant validation returned status ${response.status}`)
+      // If API returns 404 or error, tenant doesn't exist
+      return false
     }
     
     const data = await response.json()
     return data.exists === true
   } catch (error) {
     console.error('Failed to validate tenant:', error)
-    // On network error, fail open (allow access)
-    return true
+    // On network error, fail closed (reject access) - better safe than sorry
+    return false
   }
 }
