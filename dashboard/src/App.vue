@@ -1,17 +1,22 @@
 <script setup>
 import { useRoute } from 'vue-router'
 import LoginView from '@/views/LoginView.vue'
+import NotFoundView from '@/views/NotFoundView.vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 
 const route = useRoute()
+
+// Pages that should be full-screen without dashboard layout
+const fullScreenPages = ['Login', 'NotFound', 'ResetPassword', 'ForgotPassword']
 </script>
 
 <template>
   <div id="app">
-    <!-- If on login page, show full-screen login -->
+    <!-- Full-screen pages without dashboard layout -->
     <LoginView v-if="route.name === 'Login'" />
+    <NotFoundView v-else-if="route.name === 'NotFound'" />
     
-    <!-- Otherwise show dashboard layout with router-view -->
+    <!-- Dashboard layout with side panel for all other pages -->
     <DashboardLayout v-else />
   </div>
 </template>
