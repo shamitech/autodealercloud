@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Mail\PasswordResetMail;
 use App\Models\PasswordResetToken;
 use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class TenantController extends Controller
@@ -67,15 +65,17 @@ class TenantController extends Controller
             'is_active' => true,
         ]);
 
-        // Generate password reset token and send email
+        // Generate password reset token
         $resetToken = PasswordResetToken::generateToken($adminUser->id);
         $resetUrl = "https://{$validated['subdomain']}.autodealercloud.com/reset-password?token={$resetToken}";
 
-        Mail::to($adminUser->email)->send(new PasswordResetMail($adminUser, $resetToken, $resetUrl));
+        // TODO: Send password reset email via SendGrid
+        // For now, just log it for debugging
+        \Log::info("Password reset for tenant {$tenant->id}: {$resetUrl}");
 
         return response()->json([
             'data' => $tenant,
-            'message' => 'Tenant created successfully. Password reset link sent to admin email.',
+            'message' => 'Tenant created successfully.',
         ], 201);
     }
 

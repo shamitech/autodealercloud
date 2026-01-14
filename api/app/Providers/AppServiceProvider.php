@@ -3,8 +3,6 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Mail\Transport\SymfonyTransport;
-use Symfony\Component\Mailer\Transport;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,12 +23,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        // Register SendGrid mailer
-        \Illuminate\Support\Facades\Mail::extend('sendgrid', function ($app) {
-            $dsn = 'sendgrid://' . env('SENDGRID_API_KEY') . '@default';
-            return new SymfonyTransport(
-                Transport::fromDsn($dsn)
-            );
-        });
+        //
     }
 }
