@@ -3,7 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Mail\Transport\SymfonyTransport;
+use Symfony\Component\Mailer\Transport;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,13 +25,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        // Register SendGrid mailer using factory
-        Mail::extend('sendgrid', function () {
-            return new \Symfony\Component\Mailer\Mailer(
-                new \Symfony\Component\Mailer\Transport\SendgridTransport(
-                    new \Symfony\Component\HttpClient\HttpClient(),
-                    env('SENDGRID_API_KEY')
-                )
+        // Register SendGrid mailer
+        \Illuminate\Support\Facades\Mail::extend('sendgrid', function ($app) {
+            $dsn = 'sendgrid://' . env('SENDGRID_API_KEY') . '@default';
+            return new SymfonyTransport(
+                Transport::fromDsn($dsn)
             );
         });
     }
