@@ -72,6 +72,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import apiClient from '@/api/client'
 
 const authStore = useAuthStore()
 const tenantStats = ref({
@@ -83,29 +84,20 @@ const recentActivity = ref([])
 
 onMounted(async () => {
   // Fetch tenant statistics
-  // TODO: Call API endpoint /api/platform/tenants/stats
-  tenantStats.value = {
-    total: 12,
-    active: 10,
-    pending: 2,
+  try {
+    const statsResponse = await apiClient.get('/platform/stats')
+    tenantStats.value = statsResponse.data
+  } catch (err) {
+    console.error('Error fetching stats:', err)
   }
 
   // Fetch recent activity
-  // TODO: Call API endpoint /api/platform/activity
-  recentActivity.value = [
-    {
-      id: 1,
-      type: 'Created',
-      description: 'New tenant "Smith Motors" registered',
-      timestamp: new Date(),
-    },
-    {
-      id: 2,
-      type: 'Updated',
-      description: 'Tenant "Johnson Auto" plan upgraded',
-      timestamp: new Date(Date.now() - 3600000),
-    },
-  ]
+  try {
+    const activityResponse = await apiClient.get('/platform/activity')
+    recentActivity.value = activityResponse.data.data || []
+  } catch (err) {
+    console.error('Error fetching activity:', err)
+  }
 })
 
 const formatTime = (date) => {

@@ -134,38 +134,18 @@ const filteredTenants = computed(() => {
 })
 
 onMounted(async () => {
-  // TODO: Fetch tenants from API
-  // const response = await apiClient.get('/platform/tenants')
-  tenants.value = [
-    {
-      id: 1,
-      name: 'Smith Motors',
-      email: 'admin@smithmotors.com',
-      subdomain: 'smith-motors',
-      status: 'active',
-      plan: 'professional',
-      created_at: new Date('2024-01-15'),
-    },
-    {
-      id: 2,
-      name: 'Johnson Auto',
-      email: 'admin@johnsonauto.com',
-      subdomain: 'johnson-auto',
-      status: 'active',
-      plan: 'starter',
-      created_at: new Date('2024-02-01'),
-    },
-    {
-      id: 3,
-      name: 'Pending Dealer',
-      email: 'admin@pendingdealer.com',
-      subdomain: 'pending-dealer',
-      status: 'pending',
-      plan: 'starter',
-      created_at: new Date('2024-03-10'),
-    },
-  ]
+  await fetchTenants()
 })
+
+const fetchTenants = async () => {
+  try {
+    const response = await apiClient.get('/platform/tenants')
+    tenants.value = response.data.data || response.data
+  } catch (err) {
+    console.error('Error fetching tenants:', err)
+    // Optional: show error message to user
+  }
+}
 
 const editTenant = (tenant) => {
   editingTenant.value = tenant
@@ -176,28 +156,27 @@ const editTenant = (tenant) => {
 const saveTenant = async () => {
   try {
     if (editingTenant.value) {
-      // TODO: Update tenant via API
-      // await apiClient.put(`/platform/tenants/${editingTenant.value.id}`, formData.value)
+      await apiClient.put(`/platform/tenants/${editingTenant.value.id}`, formData.value)
     } else {
-      // TODO: Create tenant via API
-      // await apiClient.post('/platform/tenants', formData.value)
+      await apiClient.post('/platform/tenants', formData.value)
     }
     showCreateModal.value = false
     editingTenant.value = null
-    // Refresh list
+    await fetchTenants() // Refresh list
   } catch (err) {
     console.error('Error saving tenant:', err)
+    alert(err.response?.data?.message || 'Error saving tenant')
   }
 }
 
 const deleteTenant = async (id) => {
-  if (confirm('Are you sure?')) {
+  if (confirm('Are you sure you want to delete this tenant?')) {
     try {
-      // TODO: Delete tenant via API
-      // await apiClient.delete(`/platform/tenants/${id}`)
-      tenants.value = tenants.value.filter((t) => t.id !== id)
+      await apiClient.delete(`/platform/tenants/${id}`)
+      await fetchTenants() // Refresh list
     } catch (err) {
       console.error('Error deleting tenant:', err)
+      alert(err.response?.data?.message || 'Error deleting tenant')
     }
   }
 }
