@@ -2,10 +2,7 @@
 
 namespace App\Mail;
 
-use Symfony\Component\Mailer\SmailerInterface;
-use Symfony\Component\Mime\Email;
-
-class SendgridTransport implements SmailerInterface
+class SendgridTransport
 {
     private $apiKey;
 
@@ -14,13 +11,13 @@ class SendgridTransport implements SmailerInterface
         $this->apiKey = $apiKey;
     }
 
-    public function send(Email $email): ?string
+    public function send($message)
     {
-        $from = $email->getFrom();
-        $fromEmail = current($from)->getAddress();
+        $to = $message->getTo();
+        $toEmail = key($to);
         
-        $to = $email->getTo();
-        $toEmail = current($to)->getAddress();
+        $from = $message->getFrom();
+        $fromEmail = key($from);
         
         $payload = [
             'personalizations' => [
@@ -33,11 +30,11 @@ class SendgridTransport implements SmailerInterface
             'from' => [
                 'email' => $fromEmail
             ],
-            'subject' => $email->getSubject(),
+            'subject' => $message->getSubject(),
             'content' => [
                 [
                     'type' => 'text/html',
-                    'value' => $email->getHtmlBody() ?? $email->getTextBody()
+                    'value' => $message->getBody()
                 ]
             ]
         ];
@@ -50,15 +47,17 @@ class SendgridTransport implements SmailerInterface
         ]);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
         if ($httpCode >= 200 && $httpCode < 300) {
-            return $email->getSubject();
+            return $response;
         }
 
-        throw new \Exception("SendGrid API error: HTTP {$httpCode}");
+        throw new \Exception("SendGrid API error: HTTP {$httpCode} - {$response}");
     }
 }
+
