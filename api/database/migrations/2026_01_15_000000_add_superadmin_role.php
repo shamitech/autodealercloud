@@ -14,12 +14,14 @@ return new class extends Migration
      */
     public function up()
     {
-        // PostgreSQL approach: extend the enum type
+        // For PostgreSQL, we need to drop and recreate the column
         if (DB::connection()->getDriverName() === 'pgsql') {
-            DB::statement("ALTER TYPE role_type ADD VALUE 'superadmin' BEFORE 'admin'");
+            DB::statement("ALTER TABLE users DROP CONSTRAINT users_role_check");
+            DB::statement("ALTER TABLE users ALTER COLUMN role TYPE VARCHAR(255)");
+            DB::statement("ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('superadmin', 'admin', 'editor', 'viewer', 'member'))");
         }
         
-        // Alternative: drop and recreate the column for other databases
+        // For other databases, drop and recreate
         if (DB::connection()->getDriverName() !== 'pgsql') {
             Schema::table('users', function (Blueprint $table) {
                 $table->dropColumn('role');
