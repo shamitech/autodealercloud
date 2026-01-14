@@ -23,20 +23,16 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// Test route - check current tenant
-Route::middleware(['identify-tenant'])->get('/tenant', function (Request $request) {
-    $tenant = $request->attributes->get('tenant');
-    return response()->json([
-        'tenant' => $tenant,
-        'tenant_id_from_config' => config('app.tenant_id'),
-    ]);
-});
-
 // Platform auth routes (for dashboard - no tenant context required)
 Route::prefix('platform')->group(function () {
     Route::post('login', [TenantAuthController::class, 'platformLogin']);
     Route::post('logout', [TenantAuthController::class, 'platformLogout'])->middleware('auth:sanctum');
     Route::get('me', [TenantAuthController::class, 'me'])->middleware('auth:sanctum');
+});
+
+// Test route (no middleware)
+Route::get('/platform-test', function () {
+    return ['message' => 'Platform test OK'];
 });
 
 // Admin routes for tenant management
