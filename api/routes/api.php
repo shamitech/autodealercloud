@@ -17,3 +17,12 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// Test route - check current tenant
+Route::middleware(['identify-tenant'])->get('/tenant', function (Request $request) {
+    $tenant = $request->attributes->get('tenant');
+    return response()->json([
+        'tenant' => $tenant,
+        'tenant_id_from_config' => config('app.tenant_id'),
+    ]);
+});
