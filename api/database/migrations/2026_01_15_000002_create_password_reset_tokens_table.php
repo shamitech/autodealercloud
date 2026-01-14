@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->id();
-            $table->uuid('user_id');
+            $table->unsignedBigInteger('user_id');
             $table->string('token')->unique();
             $table->timestamp('created_at');
             $table->timestamp('expires_at');
