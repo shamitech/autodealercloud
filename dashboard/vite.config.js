@@ -11,6 +11,7 @@ export default defineConfig({
     },
   },
   server: {
+    host: '::',
     port: 5173,
     allowedHosts: [
       'dashboard.autodealercloud.com',
