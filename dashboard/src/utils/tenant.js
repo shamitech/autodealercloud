@@ -28,28 +28,49 @@ export function getCurrentSubdomain() {
 /**
  * Validate if tenant exists by checking same-origin API endpoint
  * Uses the tenant subdomain's own /api endpoint to avoid CORS issues
+ * Retries with delay to handle database replication lag
  */
-export async function validateTenant(subdomain) {
+export async function validateTenant(subdomain, retries = 3) {
   if (!subdomain) {
     return true // No subdomain means platform/main domain
   }
 
-  try {
-    // Call validation endpoint through same origin (the tenant subdomain itself)
-    // This avoids CORS issues because it's same-origin
-    const response = await fetch(`/api/tenant/check?subdomain=${subdomain}`)
-    
-    if (!response.ok) {
-      console.warn(`Tenant validation returned status ${response.status}`)
-      // If API returns 404 or error, tenant doesn't exist
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      // Add cache-busting query parameter
+      const timestamp = Date.now()
+      const response = await fetch(`/api/tenant/check?subdomain=${subdomain}&t=${timestamp}`)
+      
+      if (!response.ok) {
+        console.warn(`Tenant validation returned status ${response.status} (attempt ${attempt + 1}/${retries})`)
+        // If API returns error, wait before retrying
+        if (attempt < retries - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500))
+          continue
+        }
+        return false
+      }
+      
+      const data = await response.json()
+      if (data.exists === true) {
+        return true
+      }
+      
+      // Tenant not found yet, retry with delay
+      if (attempt < retries - 1) {
+        await new Promise(resolve => setTimeout(resolve, 500))
+        continue
+      }
+      
       return false
+    } catch (error) {
+      console.error(`Failed to validate tenant (attempt ${attempt + 1}/${retries}):`, error)
+      if (attempt < retries - 1) {
+        await new Promise(resolve => setTimeout(resolve, 500))
+      }
     }
-    
-    const data = await response.json()
-    return data.exists === true
-  } catch (error) {
-    console.error('Failed to validate tenant:', error)
-    // On network error, fail closed (reject access) - better safe than sorry
-    return false
   }
+  
+  // All retries exhausted, reject access
+  return false
 }
