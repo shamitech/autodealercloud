@@ -1,11 +1,38 @@
 import axios from 'axios'
 
+// Determine if we're on a tenant subdomain or platform subdomain
+const getTenantSubdomain = () => {
+  const hostname = window.location.hostname
+  const parts = hostname.split('.')
+  
+  // Exclude: localhost, 127.0.0.1, dashboard, api, www
+  if (
+    parts.length <= 2 || 
+    hostname === 'localhost' || 
+    hostname === '127.0.0.1' ||
+    hostname.includes('dashboard') ||
+    hostname.includes('api') ||
+    hostname.includes('www')
+  ) {
+    return null
+  }
+  
+  return parts[0]
+}
+
 // Use correct API URL based on environment
 const getAPIURL = () => {
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     return 'http://localhost:8001/api'
   }
-  // Production: use the same host but with /api prefix
+  
+  // If on a tenant subdomain, use same-origin API to avoid CORS
+  const tenantSubdomain = getTenantSubdomain()
+  if (tenantSubdomain) {
+    return `${window.location.protocol}//${window.location.host}/api`
+  }
+  
+  // Dashboard accessing API via api.autodealercloud.com
   return `${window.location.protocol}//api.autodealercloud.com/api`
 }
 
