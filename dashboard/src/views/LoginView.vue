@@ -1,3 +1,45 @@
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { useTenantAuthStore } from '@/stores/tenantAuth'
+import { getCurrentSubdomain } from '@/utils/tenant'
+
+const router = useRouter()
+const platformAuthStore = useAuthStore()
+const tenantAuthStore = useTenantAuthStore()
+
+const email = ref('')
+const password = ref('')
+const currentSubdomain = ref(null)
+
+onMounted(() => {
+  currentSubdomain.value = getCurrentSubdomain()
+})
+
+const getAuthStore = () => {
+  return currentSubdomain.value ? tenantAuthStore : platformAuthStore
+}
+
+const handleLogin = async () => {
+  const authStore = getAuthStore()
+  const success = await authStore.login(email.value, password.value)
+  if (success) {
+    router.push('/')
+  }
+}
+
+const getErrorMessage = () => {
+  const authStore = getAuthStore()
+  return authStore.error
+}
+
+const isLoading = () => {
+  const authStore = getAuthStore()
+  return authStore.isLoading
+}
+</script>
+
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-600 to-purple-700 flex items-center justify-center">
     <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
@@ -7,8 +49,8 @@
       </div>
 
       <!-- Error Message -->
-      <div v-if="authStore.error" class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-        {{ authStore.error }}
+      <div v-if="getErrorMessage()" class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+        {{ getErrorMessage() }}
       </div>
 
       <!-- Form -->
@@ -43,10 +85,10 @@
 
         <button
           type="submit"
-          :disabled="authStore.isLoading"
+          :disabled="isLoading()"
           class="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition"
         >
-          {{ authStore.isLoading ? 'Logging in...' : 'Login' }}
+          {{ isLoading() ? 'Logging in...' : 'Login' }}
         </button>
       </form>
 
@@ -59,22 +101,3 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-
-const router = useRouter()
-const authStore = useAuthStore()
-
-const email = ref('')
-const password = ref('')
-
-const handleLogin = async () => {
-  const success = await authStore.login(email.value, password.value)
-  if (success) {
-    router.push('/')
-  }
-}
-</script>

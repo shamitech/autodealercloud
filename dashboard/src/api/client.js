@@ -47,9 +47,19 @@ export const apiClient = axios.create({
 
 // Add token to requests
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('auth_token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
+  // For tenant subdomains, use tenant auth token
+  const tenantSubdomain = getTenantSubdomain()
+  if (tenantSubdomain) {
+    const token = localStorage.getItem('tenant_auth_token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+  } else {
+    // For platform/dashboard, use platform auth token
+    const token = localStorage.getItem('auth_token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
   }
   return config
 })

@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useTenantAuthStore } from '@/stores/tenantAuth'
 import { getCurrentSubdomain, validateTenant } from '@/utils/tenant'
 
 // Views
@@ -98,8 +99,12 @@ const router = createRouter({
 
 // Navigation guard
 router.beforeEach(async (to, from, next) => {
-  const authStore = useAuthStore()
+  const platformAuthStore = useAuthStore()
+  const tenantAuthStore = useTenantAuthStore()
   const subdomain = getCurrentSubdomain()
+  
+  // Use the appropriate auth store based on context
+  const authStore = subdomain ? tenantAuthStore : platformAuthStore
 
   // Check if we're on a tenant subdomain and validate it exists
   if (subdomain && !to.meta.skipTenantValidation) {
@@ -125,7 +130,7 @@ router.beforeEach(async (to, from, next) => {
     if (authStore.isAuthenticated) {
       // Redirect authenticated users away from login
       // Platform admins go to /platform, others to /
-      if (authStore.isPlatformAdmin) {
+      if (!subdomain && platformAuthStore.isPlatformAdmin) {
         next('/platform')
       } else {
         next('/')
@@ -151,13 +156,21 @@ router.beforeEach(async (to, from, next) => {
       )
       if (!hasRequiredRole) {
         // Redirect to appropriate dashboard based on role
-        if (authStore.isPlatformAdmin) {
+        if (!subdomain && platformAuthStore.isPlatformAdmin) {
           next('/platform')
         } else {
           next('/')
         }
         return
       }
+    }
+
+    next()
+    return
+  }
+
+  next()
+})
     }
   }
 
