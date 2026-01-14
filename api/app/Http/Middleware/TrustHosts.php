@@ -14,7 +14,13 @@ class TrustHosts extends Middleware
     public function hosts()
     {
         return [
-            $this->allSubdomainsOfApplicationUrl(),
+            'api.autodealercloud.com',
+            'dashboard.autodealercloud.com',
+            'dealer1.autodealercloud.com',
+            'dealer2.autodealercloud.com',
+            'dealer3.autodealercloud.com',
+            'localhost:8000',
+            'localhost:8001',
         ];
     }
 }
