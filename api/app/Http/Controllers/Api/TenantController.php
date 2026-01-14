@@ -35,15 +35,34 @@ class TenantController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'slug' => 'required|string|unique:tenants|max:50',
-            'domain' => 'nullable|string|unique:tenants',
-            'status' => 'required|in:active,inactive,suspended',
+            'email' => 'required|email|max:255',
+            'subdomain' => 'required|string|max:50|unique:tenants,domain',
+            'plan' => 'nullable|string|in:starter,professional,enterprise',
         ]);
 
-        $tenant = Tenant::create($validated);
+        // Create tenant with domain based on subdomain
+        $tenantData = [
+            'name' => $validated['name'],
+            'domain' => $validated['subdomain'] . '.autodealercloud.com',
+            'slug' => $validated['subdomain'],
+            'status' => 'active',
+            'plan' => $validated['plan'] ?? 'starter',
+        ];
+
+        $tenant = Tenant::create($tenantData);
+
+        // Create a user for this tenant with admin role
+        $tenant->users()->create([
+            'name' => $validated['name'] . ' Admin',
+            'email' => $validated['email'],
+            'password' => bcrypt(str_random(16)),
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
 
         return response()->json([
             'data' => $tenant,
+            'message' => 'Tenant created successfully',
         ], 201);
     }
 
@@ -53,15 +72,24 @@ class TenantController extends Controller
     public function update(Request $request, Tenant $tenant)
     {
         $validated = $request->validate([
-            'name' => 'string|max:255',
-            'domain' => 'nullable|string|unique:tenants,domain,' . $tenant->id,
-            'status' => 'in:active,inactive,suspended',
+            'name' => 'sometimes|string|max:255',
+            'email' => 'sometimes|email|max:255',
+            'plan' => 'sometimes|string|in:starter,professional,enterprise',
+            'status' => 'sometimes|in:active,inactive,suspended',
         ]);
 
-        $tenant->update($validated);
+        // Don't allow changing subdomain/domain directly
+        $updateData = array_filter([
+            'name' => $validated['name'] ?? null,
+            'status' => $validated['status'] ?? null,
+            'plan' => $validated['plan'] ?? null,
+        ]);
+
+        $tenant->update($updateData);
 
         return response()->json([
             'data' => $tenant,
+            'message' => 'Tenant updated successfully',
         ]);
     }
 
