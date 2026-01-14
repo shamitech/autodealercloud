@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Mail\PasswordResetMail;
 use App\Models\PasswordResetToken;
 use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class TenantController extends Controller
@@ -67,20 +65,76 @@ class TenantController extends Controller
             'is_active' => true,
         ]);
 
-        // Generate password reset token and send email
+        // Generate password reset token
         $resetToken = PasswordResetToken::generateToken($adminUser->id);
         $resetUrl = "https://{$validated['subdomain']}.autodealercloud.com/reset-password?token={$resetToken}";
 
-        try {
-            Mail::to($adminUser->email)->send(new PasswordResetMail($adminUser, $resetToken, $resetUrl));
-        } catch (\Exception $e) {
-            \Log::error("Failed to send reset email: " . $e->getMessage());
-        }
+        // Send password reset email via SendGrid
+        $this->sendPasswordResetEmail($adminUser->email, $adminUser->name, $resetUrl);
 
         return response()->json([
             'data' => $tenant,
             'message' => 'Tenant created successfully. Password reset link sent to admin email.',
         ], 201);
+    }
+
+    /**
+     * Send password reset email via SendGrid
+     */
+    private function sendPasswordResetEmail($toEmail, $toName, $resetUrl)
+    {
+        $apiKey = env('SENDGRID_API_KEY');
+        if (!$apiKey) {
+            \Log::warning("SendGrid API key not configured");
+            return;
+        }
+
+        $htmlBody = view('emails.password-reset', [
+            'name' => $toName,
+            'resetUrl' => $resetUrl,
+        ])->render();
+
+        $payload = [
+            'personalizations' => [
+                [
+                    'to' => [
+                        ['email' => $toEmail, 'name' => $toName]
+                    ]
+                ]
+            ],
+            'from' => [
+                'email' => env('MAIL_FROM_ADDRESS', 'noreply@autodealercloud.com'),
+                'name' => env('MAIL_FROM_NAME', 'AutoDealerCloud')
+            ],
+            'subject' => 'Reset Your Password',
+            'content' => [
+                [
+                    'type' => 'text/html',
+                    'value' => $htmlBody
+                ]
+            ]
+        ];
+
+        $ch = curl_init('https://api.sendgrid.com/v3/mail/send');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Authorization: Bearer ' . $apiKey,
+            'Content-Type: application/json',
+        ]);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if ($httpCode >= 200 && $httpCode < 300) {
+            \Log::info("Password reset email sent to {$toEmail}");
+        } else {
+            \Log::error("Failed to send password reset email to {$toEmail}: HTTP {$httpCode} - {$error}");
+        }
     }
 
     /**
