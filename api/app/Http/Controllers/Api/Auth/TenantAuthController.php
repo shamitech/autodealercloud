@@ -150,9 +150,6 @@ class TenantAuthController extends Controller
             ], 500);
         }
     }
-            ], 500);
-        }
-    }
 
     /**
      * Handle tenant user logout
