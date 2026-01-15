@@ -55,7 +55,9 @@
           📊 Dashboard
         </router-link>
         
+        <!-- Products - Only for tenant users, not platform admins -->
         <router-link
+          v-if="!authStore.isPlatformAdmin"
           to="/products"
           class="block px-4 py-2 rounded hover:bg-gray-800 transition"
           :class="{ 'bg-gray-700': route.name === 'Products' }"
@@ -63,8 +65,9 @@
           📦 Products
         </router-link>
         
+        <!-- Lightspeed - Only for tenant users -->
         <router-link
-          v-if="authStore.user?.role === 'admin' || authStore.user?.role === 'editor'"
+          v-if="!authStore.isPlatformAdmin && (authStore.user?.role === 'admin' || authStore.user?.role === 'editor')"
           to="/lightspeed"
           class="block px-4 py-2 rounded hover:bg-gray-800 transition"
           :class="{ 'bg-gray-700': route.name === 'Lightspeed' }"

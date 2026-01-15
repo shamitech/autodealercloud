@@ -76,13 +76,13 @@ const routes = [
     path: '/products',
     name: 'Products',
     component: ProductsView,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, roles: ['admin', 'member', 'editor'], skipTenantValidation: false },
   },
   {
     path: '/lightspeed',
     name: 'Lightspeed',
     component: LightspeedView,
-    meta: { requiresAuth: true, roles: ['admin', 'editor', 'superadmin'] },
+    meta: { requiresAuth: true, roles: ['admin', 'editor'], skipTenantValidation: false },
   },
   {
     path: '/profile',
