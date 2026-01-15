@@ -118,6 +118,20 @@ class TenantAuthController extends Controller
                 ], 401);
             }
 
+            // SECURITY: Platform login only allows users with no tenant_id (platform admins)
+            if ($user->tenant_id) {
+                return response()->json([
+                    'error' => 'Access denied. This account belongs to a tenant and cannot access the platform.',
+                ], 403);
+            }
+
+            // Also check role - must be superadmin or admin
+            if (!in_array($user->role, ['superadmin', 'admin'])) {
+                return response()->json([
+                    'error' => 'Access denied. You do not have permission to access the platform.',
+                ], 403);
+            }
+
             $token = $user->createToken('auth_token')->plainTextToken;
 
             return response()->json([
@@ -133,6 +147,9 @@ class TenantAuthController extends Controller
             return response()->json([
                 'error' => $e->getMessage(),
                 'debug' => class_basename($e),
+            ], 500);
+        }
+    }
             ], 500);
         }
     }
@@ -158,6 +175,23 @@ class TenantAuthController extends Controller
 
         return response()->json([
             'message' => 'Logged out successfully',
+        ]);
+    }
+
+    /**
+     * Get authenticated platform user
+     */
+    public function platformMe(Request $request)
+    {
+        $user = $request->user();
+
+        // SECURITY: Platform endpoint can only be accessed by platform admins (no tenant_id)
+        if (!$user || $user->tenant_id) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        return response()->json([
+            'user' => $user,
         ]);
     }
 

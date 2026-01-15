@@ -33,7 +33,7 @@ Route::prefix('platform')->group(function () {
     // Protected platform routes (require authentication)
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('logout', [TenantAuthController::class, 'platformLogout']);
-        Route::get('me', [TenantAuthController::class, 'me']);
+        Route::get('me', [TenantAuthController::class, 'platformMe']);
         
         // Tenant management (platform admin only)
         Route::apiResource('tenants', TenantController::class);
