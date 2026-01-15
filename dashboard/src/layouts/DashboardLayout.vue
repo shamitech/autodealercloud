@@ -74,6 +74,16 @@
         >
           ⚡ Lightspeed
         </router-link>
+
+        <!-- Custom Domain - Only for tenant users -->
+        <router-link
+          v-if="!authStore.isPlatformAdmin"
+          to="/tenant-domains"
+          class="block px-4 py-2 rounded hover:bg-gray-800 transition"
+          :class="{ 'bg-gray-700': route.name === 'TenantDomains' }"
+        >
+          🌐 Custom Domain
+        </router-link>
       </nav>
 
       <!-- Bottom Section -->

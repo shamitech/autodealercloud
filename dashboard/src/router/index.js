@@ -13,6 +13,7 @@ import PlatformDashboardView from '@/views/PlatformDashboardView.vue'
 import TenantsView from '@/views/TenantsView.vue'
 import UsersView from '@/views/UsersView.vue'
 import DomainsView from '@/views/DomainsView.vue'
+import TenantDomainsView from '@/views/TenantDomainsView.vue'
 import ProductsView from '@/views/ProductsView.vue'
 import LightspeedView from '@/views/LightspeedView.vue'
 import ProfileView from '@/views/ProfileView.vue'
@@ -83,6 +84,12 @@ const routes = [
     name: 'Lightspeed',
     component: LightspeedView,
     meta: { requiresAuth: true, roles: ['admin', 'editor'], skipTenantValidation: false },
+  },
+  {
+    path: '/tenant-domains',
+    name: 'TenantDomains',
+    component: TenantDomainsView,
+    meta: { requiresAuth: true, roles: ['admin', 'member', 'editor'], skipTenantValidation: false },
   },
   {
     path: '/profile',
