@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('navigation_items', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->uuid('id')->primary()->unique();
             $table->uuid('tenant_id');
             $table->uuid('parent_id')->nullable(); // For dropdown menus
             
@@ -46,12 +46,15 @@ return new class extends Migration
             $table->string('highlight_color')->nullable();
             
             $table->timestamps();
-            
+
+            $table->index(['tenant_id', 'location', 'order']);
+        });
+
+        // Add foreign keys after table is created
+        Schema::table('navigation_items', function (Blueprint $table) {
             $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
             $table->foreign('parent_id')->references('id')->on('navigation_items')->onDelete('cascade');
             $table->foreign('page_id')->references('id')->on('pages')->onDelete('set null');
-            
-            $table->index(['tenant_id', 'location', 'order']);
         });
     }
 
