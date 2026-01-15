@@ -38,7 +38,7 @@ return new class extends Migration
             
             // Usage tracking
             $table->enum('type', ['image', 'video', 'document', 'other'])->default('image');
-            $table->uuid('uploaded_by')->nullable();
+            $table->unsignedBigInteger('uploaded_by')->nullable();
             
             $table->timestamps();
             
