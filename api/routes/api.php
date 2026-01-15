@@ -3,7 +3,12 @@
 use App\Http\Controllers\Api\Auth\TenantAuthController;
 use App\Http\Controllers\Api\DomainController;
 use App\Http\Controllers\Api\LightspeedController;
+use App\Http\Controllers\Api\MediaLibraryController;
+use App\Http\Controllers\Api\NavigationController;
+use App\Http\Controllers\Api\PageController;
 use App\Http\Controllers\Api\PasswordResetController;
+use App\Http\Controllers\Api\ProductSettingsController;
+use App\Http\Controllers\Api\SiteSettingsController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\TenantValidationController;
 use App\Http\Controllers\Api\UserController;
@@ -117,4 +122,61 @@ Route::middleware(['identify-tenant'])->group(function () {
     Route::get('lightspeed/products', [LightspeedController::class, 'products'])->middleware('auth:sanctum');
     Route::get('lightspeed/products/{product}', [LightspeedController::class, 'show'])->middleware('auth:sanctum');
     Route::post('lightspeed/disconnect', [LightspeedController::class, 'disconnect'])->middleware('auth:sanctum');
+    
+    // ====================
+    // Website Builder / CMS Routes
+    // ====================
+    
+    // Site Settings
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('site-settings', [SiteSettingsController::class, 'show']);
+        Route::put('site-settings', [SiteSettingsController::class, 'update']);
+        Route::post('site-settings/logo', [SiteSettingsController::class, 'uploadLogo']);
+        Route::post('site-settings/favicon', [SiteSettingsController::class, 'uploadFavicon']);
+        Route::get('site-settings/fonts', [SiteSettingsController::class, 'getFonts']);
+    });
+    
+    // Public CSS variables (no auth required for storefront)
+    Route::get('site-settings/css', [SiteSettingsController::class, 'getCssVariables']);
+    
+    // Pages (Admin)
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::apiResource('pages', PageController::class);
+        Route::post('pages/{page}/duplicate', [PageController::class, 'duplicate']);
+        Route::put('pages/{page}/blocks', [PageController::class, 'updateBlocks']);
+        Route::get('pages/block-types', [PageController::class, 'getBlockTypes']);
+    });
+    
+    // Pages (Public - for storefront rendering)
+    Route::get('public/pages/homepage', [PageController::class, 'getHomepage']);
+    Route::get('public/pages/{slug}', [PageController::class, 'getBySlug']);
+    
+    // Navigation (Admin)
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::apiResource('navigation', NavigationController::class);
+        Route::post('navigation/reorder', [NavigationController::class, 'reorder']);
+        Route::post('navigation/bulk-save', [NavigationController::class, 'bulkSave']);
+    });
+    
+    // Navigation (Public)
+    Route::get('public/navigation', [NavigationController::class, 'getPublicNavigation']);
+    
+    // Product Display Settings
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('product-settings/display', [ProductSettingsController::class, 'getDisplaySettings']);
+        Route::put('product-settings/display', [ProductSettingsController::class, 'updateDisplaySettings']);
+        Route::get('product-settings/sold', [ProductSettingsController::class, 'getSoldSettings']);
+        Route::put('product-settings/sold', [ProductSettingsController::class, 'updateSoldSettings']);
+        Route::get('product-settings/filters', [ProductSettingsController::class, 'getDefaultFilters']);
+        Route::get('product-settings/sold/preview', [ProductSettingsController::class, 'previewSoldBehavior']);
+    });
+    
+    // Media Library
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::apiResource('media', MediaLibraryController::class);
+        Route::delete('media/bulk-destroy', [MediaLibraryController::class, 'bulkDestroy']);
+        Route::get('media-folders', [MediaLibraryController::class, 'getFolders']);
+        Route::post('media-folders', [MediaLibraryController::class, 'createFolder']);
+        Route::post('media/move', [MediaLibraryController::class, 'moveToFolder']);
+    });
 });
