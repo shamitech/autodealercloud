@@ -8,6 +8,7 @@ import LoginView from '@/views/LoginView.vue'
 import ResetPasswordView from '@/views/ResetPasswordView.vue'
 import ForgotPasswordView from '@/views/ForgotPasswordView.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
+import PublicStorefrontView from '@/views/PublicStorefrontView.vue'
 import DashboardView from '@/views/DashboardView.vue'
 import PlatformDashboardView from '@/views/PlatformDashboardView.vue'
 import TenantsView from '@/views/TenantsView.vue'
@@ -43,56 +44,64 @@ const routes = [
     component: NotFoundView,
     meta: { public: true, skipTenantValidation: true },
   },
+  // Public storefront - accessible without login
   {
     path: '/',
+    name: 'Storefront',
+    component: PublicStorefrontView,
+    meta: { public: true },
+  },
+  // Admin routes - all require authentication
+  {
+    path: '/admin/dashboard',
     name: 'Dashboard',
     component: DashboardView,
     meta: { requiresAuth: true },
   },
   {
-    path: '/platform',
+    path: '/admin/platform',
     name: 'PlatformDashboard',
     component: PlatformDashboardView,
     meta: { requiresAuth: true, roles: ['superadmin', 'admin'] },
   },
   {
-    path: '/tenants',
+    path: '/admin/tenants',
     name: 'Tenants',
     component: TenantsView,
     meta: { requiresAuth: true, roles: ['superadmin', 'admin'] },
   },
   {
-    path: '/users',
+    path: '/admin/users',
     name: 'Users',
     component: UsersView,
     meta: { requiresAuth: true, roles: ['admin', 'superadmin'] },
   },
   {
-    path: '/domains',
+    path: '/admin/domains',
     name: 'Domains',
     component: DomainsView,
     meta: { requiresAuth: true, roles: ['superadmin', 'admin'] },
   },
   {
-    path: '/products',
+    path: '/admin/products',
     name: 'Products',
     component: ProductsView,
     meta: { requiresAuth: true, roles: ['admin', 'member', 'editor'], skipTenantValidation: false },
   },
   {
-    path: '/lightspeed',
+    path: '/admin/lightspeed',
     name: 'Lightspeed',
     component: LightspeedView,
     meta: { requiresAuth: true, roles: ['admin', 'editor'], skipTenantValidation: false },
   },
   {
-    path: '/tenant-domains',
+    path: '/admin/tenant-domains',
     name: 'TenantDomains',
     component: TenantDomainsView,
     meta: { requiresAuth: true, roles: ['admin', 'member', 'editor'], skipTenantValidation: false },
   },
   {
-    path: '/profile',
+    path: '/admin/profile',
     name: 'Profile',
     component: ProfileView,
     meta: { requiresAuth: true },
@@ -135,15 +144,15 @@ router.beforeEach(async (to, from, next) => {
   // Public routes - allow unauthenticated access
   if (to.meta.public) {
     if (authStore.isAuthenticated) {
-      // Redirect authenticated users away from login
-      // Platform admins go to /platform, others to /
+      // Redirect authenticated users away from login to appropriate dashboard
+      // Platform admins go to /admin/platform, tenant users go to /admin/dashboard
       if (!subdomain && platformAuthStore.isPlatformAdmin) {
-        next('/platform')
-      } else {
-        next('/')
+        next('/admin/platform')
+      } else if (subdomain) {
+        next('/admin/dashboard')
       }
     } else {
-      // Allow public access to public routes
+      // Allow public access to public routes (like storefront)
       next()
     }
     return
@@ -164,9 +173,9 @@ router.beforeEach(async (to, from, next) => {
       if (!hasRequiredRole) {
         // Redirect to appropriate dashboard based on role
         if (!subdomain && platformAuthStore.isPlatformAdmin) {
-          next('/platform')
-        } else {
-          next('/')
+          next('/admin/platform')
+        } else if (subdomain) {
+          next('/admin/dashboard')
         }
         return
       }

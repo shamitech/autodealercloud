@@ -4,7 +4,8 @@
     <div class="w-64 bg-gray-900 text-white flex flex-col">
       <div class="p-6 border-b border-gray-700">
         <h1 class="text-2xl font-bold">AutoDealer</h1>
-        <p class="text-sm text-gray-400 mt-2">{{ authStore.user?.name }}</p>
+        <p class="text-sm text-gray-300">Admin Dashboard</p>
+        <p class="text-xs text-gray-400 mt-2">{{ authStore.user?.name }}</p>
       </div>
       
       <nav class="flex-1 p-4 space-y-2">
@@ -12,28 +13,28 @@
         <template v-if="authStore.isPlatformAdmin">
           <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase">Platform</div>
           <router-link
-            to="/platform"
+            to="/admin/platform"
             class="block px-4 py-2 rounded hover:bg-gray-800 transition"
             :class="{ 'bg-gray-700': route.name === 'PlatformDashboard' }"
           >
             📊 Platform Dashboard
           </router-link>
           <router-link
-            to="/tenants"
+            to="/admin/tenants"
             class="block px-4 py-2 rounded hover:bg-gray-800 transition"
             :class="{ 'bg-gray-700': route.name === 'Tenants' }"
           >
             🏢 Manage Tenants
           </router-link>
           <router-link
-            to="/users"
+            to="/admin/users"
             class="block px-4 py-2 rounded hover:bg-gray-800 transition"
             :class="{ 'bg-gray-700': route.name === 'Users' }"
           >
             👥 Platform Users
           </router-link>
           <router-link
-            to="/domains"
+            to="/admin/domains"
             class="block px-4 py-2 rounded hover:bg-gray-800 transition"
             :class="{ 'bg-gray-700': route.name === 'Domains' }"
           >
@@ -44,11 +45,11 @@
 
         <!-- Dealer/Tenant Section -->
         <template v-if="authStore.isDealerAdmin">
-          <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase">Dashboard</div>
+          <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase">Management</div>
         </template>
 
         <router-link
-          to="/"
+          to="/admin/dashboard"
           class="block px-4 py-2 rounded hover:bg-gray-800 transition"
           :class="{ 'bg-gray-700': route.name === 'Dashboard' }"
         >
@@ -58,7 +59,7 @@
         <!-- Products - Only for tenant users, not platform admins -->
         <router-link
           v-if="!authStore.isPlatformAdmin"
-          to="/products"
+          to="/admin/products"
           class="block px-4 py-2 rounded hover:bg-gray-800 transition"
           :class="{ 'bg-gray-700': route.name === 'Products' }"
         >
@@ -68,7 +69,7 @@
         <!-- Lightspeed - Only for tenant users -->
         <router-link
           v-if="!authStore.isPlatformAdmin && (authStore.user?.role === 'admin' || authStore.user?.role === 'editor')"
-          to="/lightspeed"
+          to="/admin/lightspeed"
           class="block px-4 py-2 rounded hover:bg-gray-800 transition"
           :class="{ 'bg-gray-700': route.name === 'Lightspeed' }"
         >
@@ -78,7 +79,7 @@
         <!-- Custom Domain - Only for tenant users -->
         <router-link
           v-if="!authStore.isPlatformAdmin"
-          to="/tenant-domains"
+          to="/admin/tenant-domains"
           class="block px-4 py-2 rounded hover:bg-gray-800 transition"
           :class="{ 'bg-gray-700': route.name === 'TenantDomains' }"
         >
@@ -89,11 +90,18 @@
       <!-- Bottom Section -->
       <div class="p-4 border-t border-gray-700 space-y-2">
         <router-link
-          to="/profile"
+          to="/admin/profile"
           class="block px-4 py-2 rounded hover:bg-gray-800 transition"
           :class="{ 'bg-gray-700': route.name === 'Profile' }"
         >
           ⚙️ Profile
+        </router-link>
+
+        <router-link
+          to="/"
+          class="block px-4 py-2 rounded hover:bg-gray-800 transition text-sm text-gray-300"
+        >
+          👁️ View Store
         </router-link>
         
         <button
