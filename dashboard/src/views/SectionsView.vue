@@ -330,10 +330,11 @@ async function saveSections() {
       order: index,
     }))
 
-    console.log('Saving sections:', JSON.stringify(sectionsPayload, null, 2))
+    console.log('Saving sections payload:', JSON.stringify(sectionsPayload, null, 2))
 
     // Save sections structure
-    await api.post('/sections/save', { sections: sectionsPayload })
+    const sectionsResponse = await api.post('/sections/save', { sections: sectionsPayload })
+    console.log('Sections save response:', sectionsResponse.data)
 
     // Also save menu items for sections that have menu-items components
     for (const section of sections.value) {
@@ -374,11 +375,12 @@ async function saveSections() {
   } catch (err) {
     console.error('Error saving sections:', err)
     console.error('Response status:', err.response?.status)
-    console.error('Response data:', err.response?.data)
+    console.error('Full response data:', JSON.stringify(err.response?.data, null, 2))
     
     let errorMessage = 'Failed to save sections'
     if (err.response?.data?.errors) {
       const errors = err.response.data.errors
+      console.error('Validation errors:', errors)
       const errorList = Object.entries(errors)
         .map(([key, messages]) => `${key}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
         .join('\n')
@@ -387,6 +389,7 @@ async function saveSections() {
       errorMessage = err.response.data.message
     }
     
+    console.error('Final error message:', errorMessage)
     alert(errorMessage)
   } finally {
     saving.value = false
