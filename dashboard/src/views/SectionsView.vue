@@ -336,40 +336,8 @@ async function saveSections() {
     const sectionsResponse = await api.post('/sections/save', { sections: sectionsPayload })
     console.log('Sections save response:', sectionsResponse.data)
 
-    // Also save menu items for sections that have menu-items components
-    for (const section of sections.value) {
-      for (const component of section.components || []) {
-        if (component.type === 'menu-items') {
-          const location = section.name.toLowerCase().replace(/\s+/g, '-')
-          
-          // Only save if there are items
-          if (!component.data || component.data.length === 0) {
-            console.log(`Skipping empty menu for section: ${section.name}`)
-            continue
-          }
-          
-          const payload = {
-            location: location,
-            items: component.data.map((item, itemIndex) => ({
-              label: item.label,
-              link_type: item.link_type,
-              page_id: item.page_id || null,
-              url: item.url || null,
-              inventory_filters: item.inventory_filters || null,
-              order: itemIndex,
-              is_visible: item.is_visible ?? true,
-              open_in_new_tab: item.open_in_new_tab ?? false,
-              is_highlighted: item.is_highlighted ?? false,
-              highlight_color: item.highlight_color || null,
-              children: item.children || [],
-            })),
-          }
-          
-          console.log(`Saving menu items for section: ${section.name}`)
-          await api.post('/navigation/bulk-save', payload)
-        }
-      }
-    }
+    // Note: Menu items are now stored within sections.components, so we don't need to
+    // save them separately to the navigation endpoint. The sections table is the source of truth.
 
     alert('Sections saved successfully!')
   } catch (err) {
