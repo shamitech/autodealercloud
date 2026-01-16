@@ -44,7 +44,7 @@
         </template>
 
         <!-- Dealer/Tenant Section -->
-        <template v-if="authStore.isDealerAdmin">
+        <template v-if="!authStore.isPlatformAdmin || isTenantUser()">
           <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase">Management</div>
         </template>
 
@@ -58,7 +58,7 @@
         
         <!-- Products - Only for tenant users, not platform admins -->
         <router-link
-          v-if="!authStore.isPlatformAdmin"
+          v-if="isTenantUser() || !authStore.isPlatformAdmin"
           to="/admin/products"
           class="block px-4 py-2 rounded hover:bg-gray-800 transition"
           :class="{ 'bg-gray-700': route.name === 'Products' }"
@@ -68,7 +68,7 @@
         
         <!-- Lightspeed - Only for tenant users -->
         <router-link
-          v-if="!authStore.isPlatformAdmin && (authStore.user?.role === 'admin' || authStore.user?.role === 'editor')"
+          v-if="(isTenantUser() || !authStore.isPlatformAdmin) && (authStore.user?.role === 'admin' || authStore.user?.role === 'editor' || tenantAuthStore.user?.role === 'admin' || tenantAuthStore.user?.role === 'editor')"
           to="/admin/lightspeed"
           class="block px-4 py-2 rounded hover:bg-gray-800 transition"
           :class="{ 'bg-gray-700': route.name === 'Lightspeed' }"
@@ -78,7 +78,7 @@
 
         <!-- Custom Domain - Only for tenant users -->
         <router-link
-          v-if="!authStore.isPlatformAdmin"
+          v-if="isTenantUser() || !authStore.isPlatformAdmin"
           to="/admin/tenant-domains"
           class="block px-4 py-2 rounded hover:bg-gray-800 transition"
           :class="{ 'bg-gray-700': route.name === 'TenantDomains' }"
@@ -87,7 +87,7 @@
         </router-link>
 
         <!-- Website Builder Section - Only for tenant users -->
-        <template v-if="!authStore.isPlatformAdmin && (authStore.user?.role === 'admin' || authStore.user?.role === 'editor')">
+        <template v-if="isTenantUser() && (tenantAuthStore.user?.role === 'admin' || tenantAuthStore.user?.role === 'editor')">
           <div class="border-t border-gray-700 my-2"></div>
           <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase">Website Builder</div>
           
@@ -174,10 +174,17 @@
 <script setup>
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useTenantAuthStore } from '@/stores/tenantAuth'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const tenantAuthStore = useTenantAuthStore()
+
+// Check if this is a tenant user (logged in via tenantAuth)
+const isTenantUser = () => {
+  return tenantAuthStore.isAuthenticated && !authStore.isAuthenticated
+}
 
 const handleLogout = async () => {
   await authStore.logout()
