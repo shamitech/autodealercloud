@@ -165,7 +165,7 @@ function addNestedComponent(type) {
   const component = {
     id: generateId(),
     type: type,
-    data: type === 'menu-items' ? [] : {},
+    data: type === 'menu-items' ? [] : type === 'social' ? [] : {},
   }
   nestedComponents.value.push(component)
   updateData()

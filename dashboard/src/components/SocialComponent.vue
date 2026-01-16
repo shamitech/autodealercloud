@@ -87,7 +87,7 @@ const platformEmojis = {
   WhatsApp: '💬',
 }
 
-const socialLinks = ref(props.modelValue || [])
+const socialLinks = ref(Array.isArray(props.modelValue) ? props.modelValue : [])
 const openInNewTab = ref(true)
 
 function getPlatformEmoji(platform) {

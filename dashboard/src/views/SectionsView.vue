@@ -272,7 +272,7 @@ function addComponentToSection(type) {
   const component = {
     id: generateId(),
     type: type,
-    data: type === 'menu-items' ? [] : type === 'container' ? { name: 'New Container', components: [] } : {},
+    data: type === 'menu-items' ? [] : type === 'container' ? { name: 'New Container', components: [] } : type === 'social' ? [] : {},
   }
 
   sections.value[activeSection.value].components.push(component)
