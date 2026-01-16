@@ -72,22 +72,22 @@
             <div class="component-option">
               <h4>Logo</h4>
               <p>Upload and display your business logo</p>
-              <button class="btn btn-secondary btn-sm" @click="addComponentToSection('logo')" disabled>
-                + Add (Coming Soon)
+              <button class="btn btn-secondary btn-sm" @click="addComponentToSection('logo')">
+                + Add
               </button>
             </div>
             <div class="component-option">
               <h4>Search</h4>
               <p>Add a search bar to your section</p>
-              <button class="btn btn-secondary btn-sm" @click="addComponentToSection('search')" disabled>
-                + Add (Coming Soon)
+              <button class="btn btn-secondary btn-sm" @click="addComponentToSection('search')">
+                + Add
               </button>
             </div>
             <div class="component-option">
               <h4>Social Links</h4>
               <p>Display your social media profiles</p>
-              <button class="btn btn-secondary btn-sm" @click="addComponentToSection('social')" disabled>
-                + Add (Coming Soon)
+              <button class="btn btn-secondary btn-sm" @click="addComponentToSection('social')">
+                + Add
               </button>
             </div>
           </div>
@@ -120,6 +120,27 @@
                   :pages="pages"
                   @update:model-value="updateComponentData(activeSection, compIndex, $event)"
                 />
+
+                <!-- Logo Component -->
+                <LogoComponent
+                  v-if="component.type === 'logo'"
+                  :model-value="component.data"
+                  @update:model-value="updateComponentData(activeSection, compIndex, $event)"
+                />
+
+                <!-- Search Component -->
+                <SearchComponent
+                  v-if="component.type === 'search'"
+                  :model-value="component.data"
+                  @update:model-value="updateComponentData(activeSection, compIndex, $event)"
+                />
+
+                <!-- Social Component -->
+                <SocialComponent
+                  v-if="component.type === 'social'"
+                  :model-value="component.data"
+                  @update:model-value="updateComponentData(activeSection, compIndex, $event)"
+                />
               </div>
             </div>
           </div>
@@ -145,6 +166,9 @@
 import { ref, onMounted } from 'vue'
 import api from '../api/client'
 import MenuItems from '../components/MenuItems.vue'
+import LogoComponent from '../components/LogoComponent.vue'
+import SearchComponent from '../components/SearchComponent.vue'
+import SocialComponent from '../components/SocialComponent.vue'
 
 const loading = ref(true)
 const saving = ref(false)
