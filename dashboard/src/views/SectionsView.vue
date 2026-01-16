@@ -10,12 +10,15 @@
       <p>Loading sections...</p>
     </div>
 
-    <div v-else class="sections-content">
+    <div v-else class="sections-content" :class="{ 'panel-collapsed': panelCollapsed }">
       <!-- Sections List -->
-      <div class="sections-panel">
+      <div class="sections-panel" :class="{ collapsed: panelCollapsed }">
         <div class="panel-header">
-          <h2>Sections</h2>
-          <button class="btn btn-primary btn-sm" @click="addSection">
+          <h2 v-if="!panelCollapsed">Sections</h2>
+          <button v-if="panelCollapsed && activeSection !== null" class="btn-collapse-toggle" @click="panelCollapsed = false" title="Expand sections">
+            ←
+          </button>
+          <button v-if="!panelCollapsed" class="btn btn-primary btn-sm" @click="addSection">
             + Add Section
           </button>
         </div>
@@ -30,7 +33,7 @@
             :key="index"
             class="section-card"
             :class="{ active: activeSection === index }"
-            @click="activeSection = index"
+            @click="activeSection = index; panelCollapsed = true"
           >
             <div class="section-card-header">
               <h3>{{ section.name }}</h3>
@@ -47,8 +50,47 @@
         </div>
       </div>
 
-      <!-- Component Toolbar -->
-      <div class="components-toolbar">
+      <!-- Component Toolbar / Cards View -->
+      <div v-if="panelCollapsed && activeSection !== null" class="components-cards-view">
+        <button class="btn-collapse-toggle" @click="panelCollapsed = false" title="Show sections list">
+          ←
+        </button>
+        <div class="component-cards-grid">
+          <div class="component-card" @click="addComponentToSection('menu-items')">
+            <div class="card-icon">📋</div>
+            <h4>Menu Items</h4>
+            <p>Add navigation menu with unlimited tiers</p>
+            <button class="btn btn-sm btn-primary">+ Add</button>
+          </div>
+          <div class="component-card" @click="addComponentToSection('logo')">
+            <div class="card-icon">🏷️</div>
+            <h4>Logo</h4>
+            <p>Upload and configure your company logo</p>
+            <button class="btn btn-sm btn-primary">+ Add</button>
+          </div>
+          <div class="component-card" @click="addComponentToSection('search')">
+            <div class="card-icon">🔍</div>
+            <h4>Search</h4>
+            <p>Add search functionality to your site</p>
+            <button class="btn btn-sm btn-primary">+ Add</button>
+          </div>
+          <div class="component-card" @click="addComponentToSection('social')">
+            <div class="card-icon">👥</div>
+            <h4>Social Links</h4>
+            <p>Link to your social media profiles</p>
+            <button class="btn btn-sm btn-primary">+ Add</button>
+          </div>
+          <div class="component-card" @click="addComponentToSection('container')">
+            <div class="card-icon">📦</div>
+            <h4>Container</h4>
+            <p>Group components and organize layout</p>
+            <button class="btn btn-sm btn-primary">+ Add</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Component Toolbar (when panel expanded) -->
+      <div v-if="!panelCollapsed" class="components-toolbar">
         <button
           class="component-btn"
           @click="addComponentToSection('menu-items')"
@@ -87,8 +129,11 @@
       </div>
 
       <!-- Section Editor -->
-      <div v-if="activeSection !== null && sections[activeSection]" class="section-editor">
+      <div v-if="activeSection !== null && sections[activeSection]" class="section-editor" :class="{ 'panel-expanded': !panelCollapsed }">
         <div class="editor-header">
+          <button v-if="!panelCollapsed" class="btn-collapse-toggle" @click="panelCollapsed = true" title="Collapse sections list">
+            →
+          </button>
           <h2>{{ sections[activeSection].name }}</h2>
           <div class="editor-actions">
             <button class="btn btn-secondary btn-sm" @click="editSectionName">
@@ -209,6 +254,7 @@ import ContainerComponent from '../components/ContainerComponent.vue'
 const loading = ref(true)
 const saving = ref(false)
 const activeSection = ref(null)
+const panelCollapsed = ref(false)
 const pages = ref([])
 const sections = ref([])
 
@@ -426,6 +472,11 @@ onMounted(() => {
   grid-template-columns: 280px 70px 1fr;
   gap: 0;
   min-height: calc(100vh - 140px);
+  transition: grid-template-columns 0.3s ease;
+}
+
+.sections-content.panel-collapsed {
+  grid-template-columns: 60px 1fr;
 }
 
 .sections-panel {
@@ -435,6 +486,12 @@ onMounted(() => {
   flex-direction: column;
   max-height: calc(100vh - 140px);
   overflow-y: auto;
+  transition: all 0.3s ease;
+}
+
+.sections-panel.collapsed {
+  width: 60px;
+  padding: 0;
 }
 
 .panel-header {
@@ -488,6 +545,83 @@ onMounted(() => {
 
 .component-btn:active {
   background: #DBEAFE;
+}
+
+.btn-collapse-toggle {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  color: #6B7280;
+  transition: color 0.2s;
+}
+
+.btn-collapse-toggle:hover {
+  color: #111827;
+}
+
+.components-cards-view {
+  display: flex;
+  flex-direction: column;
+  background: #F9FAFB;
+  border-right: 1px solid #E5E7EB;
+  overflow-y: auto;
+  padding: 0.75rem 0;
+  max-height: calc(100vh - 140px);
+  padding-bottom: 1rem;
+}
+
+.component-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.component-card {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.component-card:hover {
+  border-color: #3B82F6;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.card-icon {
+  font-size: 2rem;
+}
+
+.component-card h4 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.component-card p {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #6B7280;
+  flex: 1;
+  line-height: 1.3;
+}
+
+.component-card .btn {
+  width: 100%;
+  margin-top: auto;
 }
 
 .empty-sections {
@@ -573,6 +707,12 @@ onMounted(() => {
 .section-editor {
   padding: 2rem;
   overflow-y: auto;
+  max-height: calc(100vh - 140px);
+  transition: all 0.3s ease;
+}
+
+.section-editor.panel-expanded {
+  /* Full width when toolbar is visible */
 }
 
 .editor-header {
@@ -582,6 +722,7 @@ onMounted(() => {
   margin-bottom: 2rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid #E5E7EB;
+  gap: 1rem;
 }
 
 .editor-header h2 {
