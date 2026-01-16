@@ -59,7 +59,7 @@
                       @click="toggleExpand(element.tempId)"
                       :title="expandedItem === element.tempId ? 'Collapse' : 'Edit'"
                     >
-                      {{ expandedItem === element.id ? '▲' : '▼' }}
+                      {{ expandedItem === element.tempId ? '▲' : '▼' }}
                     </button>
                     <button
                       class="action-btn delete"
@@ -328,15 +328,25 @@ async function loadNavigation() {
       .filter(i => i.location === 'header')
       .map(i => ({
         ...i,
+        tempId: i.id || generateId(), // Add tempId for Vue key
         children: i.children || [],
         inventory_filters: i.inventory_filters || {},
+        is_visible: i.is_visible ?? true,
+        open_in_new_tab: i.open_in_new_tab ?? false,
+        is_highlighted: i.is_highlighted ?? false,
+        highlight_color: i.highlight_color || null,
       }))
     footerItems.value = items
       .filter(i => i.location === 'footer')
       .map(i => ({
         ...i,
+        tempId: i.id || generateId(), // Add tempId for Vue key
         children: i.children || [],
         inventory_filters: i.inventory_filters || {},
+        is_visible: i.is_visible ?? true,
+        open_in_new_tab: i.open_in_new_tab ?? false,
+        is_highlighted: i.is_highlighted ?? false,
+        highlight_color: i.highlight_color || null,
       }))
     pages.value = pagesRes.data.data || []
   } catch (err) {
@@ -350,8 +360,7 @@ async function loadNavigation() {
 async function saveNavigation() {
   saving.value = true
   try {
-    // Save header navigation
-    await api.post('/navigation/bulk-save', {
+    const headerPayload = {
       location: 'header',
       items: headerItems.value.map((item, index) => ({
         label: item.label,
@@ -366,10 +375,9 @@ async function saveNavigation() {
         highlight_color: item.highlight_color || null,
         children: item.children || [],
       })),
-    })
-
-    // Save footer navigation
-    await api.post('/navigation/bulk-save', {
+    }
+    
+    const footerPayload = {
       location: 'footer',
       items: footerItems.value.map((item, index) => ({
         label: item.label,
@@ -384,11 +392,21 @@ async function saveNavigation() {
         highlight_color: item.highlight_color || null,
         children: item.children || [],
       })),
-    })
+    }
+    
+    console.log('Sending header payload:', headerPayload)
+    console.log('Sending footer payload:', footerPayload)
+    
+    // Save header navigation
+    await api.post('/navigation/bulk-save', headerPayload)
+
+    // Save footer navigation
+    await api.post('/navigation/bulk-save', footerPayload)
 
     alert('Navigation saved successfully!')
   } catch (err) {
     console.error('Error saving navigation:', err)
+    console.error('Response status:', err.response?.status)
     console.error('Response data:', err.response?.data)
     
     // Extract validation errors
