@@ -30,7 +30,7 @@
             <div
               class="section-card"
               :class="{ active: activeSection === index }"
-              @click="activeSection = index"
+              @click="activeSection === index ? activeSection = null : activeSection = index"
             >
               <div class="section-card-header">
                 <h3>{{ section.name }}</h3>
@@ -461,54 +461,64 @@ onMounted(() => {
 .component-cards {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .component-card {
-  background: white;
-  border: 1px solid #D1D5DB;
-  border-radius: 0.375rem;
-  padding: 0.75rem;
+  background: linear-gradient(135deg, #FFFFFF 0%, #F8FBFF 100%);
+  border: 2px solid #E5E7EB;
+  border-radius: 0.625rem;
+  padding: 1rem;
   text-align: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.5rem;
   align-items: center;
   font-size: 0.85rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .component-card:hover {
   border-color: #3B82F6;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-  background: #F8FBFF;
+  box-shadow: 0 8px 12px rgba(59, 130, 246, 0.15);
+  background: linear-gradient(135deg, #F8FBFF 0%, #EFF6FF 100%);
+  transform: translateY(-2px);
+}
+
+.component-card:active {
+  transform: translateY(0);
 }
 
 .card-icon {
-  font-size: 1.5rem;
+  font-size: 2rem;
   line-height: 1;
 }
 
 .component-card h4 {
   margin: 0;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #111827;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1F2937;
+  letter-spacing: -0.3px;
 }
 
 .component-card p {
   margin: 0;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: #6B7280;
+  font-weight: 500;
 }
 
 .component-card .btn {
   width: 100%;
-  padding: 0.375rem 0.5rem;
-  font-size: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
   margin-top: 0.25rem;
+  font-weight: 600;
 }
+
 
 
 
