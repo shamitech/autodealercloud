@@ -433,9 +433,6 @@ onMounted(() => {
   flex-direction: column;
   max-height: calc(100vh - 140px);
   overflow-y: auto;
-  position: sticky;
-  top: 0;
-  align-self: start;
 }
 
 .panel-header {
