@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\SiteSettingsController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\TenantValidationController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\SectionController;
 use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -160,6 +161,13 @@ Route::middleware(['identify-tenant'])->group(function () {
     
     // Navigation (Public)
     Route::get('public/navigation', [NavigationController::class, 'getPublicNavigation']);
+    
+    // Sections (Admin)
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('sections', [SectionController::class, 'index']);
+        Route::post('sections/save', [SectionController::class, 'save']);
+        Route::delete('sections/{id}', [SectionController::class, 'destroy']);
+    });
     
     // Product Display Settings
     Route::middleware('auth:sanctum')->group(function () {

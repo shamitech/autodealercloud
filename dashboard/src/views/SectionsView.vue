@@ -208,26 +208,7 @@ const loading = ref(true)
 const saving = ref(false)
 const activeSection = ref(null)
 const pages = ref([])
-const sections = ref([
-  {
-    name: 'Header Navigation',
-    components: [
-      {
-        type: 'menu-items',
-        data: [],
-      },
-    ],
-  },
-  {
-    name: 'Footer',
-    components: [
-      {
-        type: 'menu-items',
-        data: [],
-      },
-    ],
-  },
-])
+const sections = ref([])
 
 function generateId() {
   return 'sec-' + Math.random().toString(36).substr(2, 9)
@@ -327,8 +308,8 @@ async function loadPages() {
 async function loadSections() {
   loading.value = true
   try {
-    // TODO: Load sections from API
-    // For now, we'll use the default sections initialized above
+    const res = await api.get('/sections')
+    sections.value = res.data.data || []
     await loadPages()
   } catch (err) {
     console.error('Error loading sections:', err)
@@ -341,12 +322,23 @@ async function loadSections() {
 async function saveSections() {
   saving.value = true
   try {
-    // Save each section's components to the appropriate API endpoints
+    // Prepare sections data for saving
+    const sectionsPayload = sections.value.map((section, index) => ({
+      id: section.id || null, // Include ID if it exists (for updates)
+      name: section.name,
+      components: section.components || [],
+      order: index,
+    }))
+
+    console.log('Saving sections:', JSON.stringify(sectionsPayload, null, 2))
+
+    // Save sections structure
+    await api.post('/sections/save', { sections: sectionsPayload })
+
+    // Also save menu items for sections that have menu-items components
     for (const section of sections.value) {
       for (const component of section.components || []) {
         if (component.type === 'menu-items') {
-          // Save menu items using the navigation endpoint
-          // We'll use the section name as the location identifier
           const location = section.name.toLowerCase().replace(/\s+/g, '-')
           
           // Only save if there are items
@@ -357,13 +349,13 @@ async function saveSections() {
           
           const payload = {
             location: location,
-            items: component.data.map((item, index) => ({
+            items: component.data.map((item, itemIndex) => ({
               label: item.label,
               link_type: item.link_type,
               page_id: item.page_id || null,
               url: item.url || null,
               inventory_filters: item.inventory_filters || null,
-              order: index,
+              order: itemIndex,
               is_visible: item.is_visible ?? true,
               open_in_new_tab: item.open_in_new_tab ?? false,
               is_highlighted: item.is_highlighted ?? false,
@@ -372,12 +364,8 @@ async function saveSections() {
             })),
           }
           
-          console.log(`Saving menu for section: ${section.name}`)
-          console.log('Location:', location)
-          console.log('Payload:', JSON.stringify(payload, null, 2))
-          
+          console.log(`Saving menu items for section: ${section.name}`)
           await api.post('/navigation/bulk-save', payload)
-          console.log(`Menu saved for section: ${section.name}`)
         }
       }
     }
@@ -387,12 +375,10 @@ async function saveSections() {
     console.error('Error saving sections:', err)
     console.error('Response status:', err.response?.status)
     console.error('Response data:', err.response?.data)
-    console.log('Response data JSON:', JSON.stringify(err.response?.data, null, 2))
     
     let errorMessage = 'Failed to save sections'
     if (err.response?.data?.errors) {
       const errors = err.response.data.errors
-      console.log('Validation errors:', errors)
       const errorList = Object.entries(errors)
         .map(([key, messages]) => `${key}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
         .join('\n')
