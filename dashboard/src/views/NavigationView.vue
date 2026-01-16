@@ -389,7 +389,23 @@ async function saveNavigation() {
     alert('Navigation saved successfully!')
   } catch (err) {
     console.error('Error saving navigation:', err)
-    alert(err.response?.data?.error || 'Failed to save navigation')
+    console.error('Response data:', err.response?.data)
+    
+    // Extract validation errors
+    let errorMessage = 'Failed to save navigation'
+    if (err.response?.data?.errors) {
+      const errors = err.response.data.errors
+      const errorList = Object.entries(errors)
+        .map(([key, messages]) => `${key}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+        .join('\n')
+      errorMessage = `Validation errors:\n${errorList}`
+    } else if (err.response?.data?.error) {
+      errorMessage = err.response.data.error
+    } else if (err.response?.data?.message) {
+      errorMessage = err.response.data.message
+    }
+    
+    alert(errorMessage)
   } finally {
     saving.value = false
   }
