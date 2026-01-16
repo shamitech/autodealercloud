@@ -1,22 +1,5 @@
 <template>
   <div class="min-h-screen" :style="{ backgroundColor: colors.background }">
-    <!-- CSS Variables for Dynamic Styling -->
-    <style scoped>
-      :root {
-        --color-primary: v-bind('colors.primary');
-        --color-secondary: v-bind('colors.secondary');
-        --color-accent: v-bind('colors.accent');
-        --color-text: v-bind('colors.text');
-        --font-heading: v-bind('typography.headingFont');
-        --font-body: v-bind('typography.bodyFont');
-      }
-
-      .dynamic-primary { color: var(--color-primary); }
-      .dynamic-secondary { color: var(--color-secondary); }
-      .dynamic-accent { background-color: var(--color-accent); }
-      .dynamic-bg-primary { background-color: var(--color-primary); }
-    </style>
-
     <!-- Header with Logo & Navigation -->
     <header class="sticky top-0 z-40 bg-white shadow-sm">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
@@ -34,8 +17,7 @@
             v-for="item in headerNavigation"
             :key="item.id"
             :to="`/pages/${item.page_id}`"
-            :class="['text-sm font-medium transition hover:opacity-75', 
-                     { 'dynamic-primary': !item.color, 'text-white': item.color === 'white' }]"
+            class="text-sm font-medium transition hover:opacity-75"
             :style="{ color: item.color || colors.text }"
           >
             {{ item.label }}
