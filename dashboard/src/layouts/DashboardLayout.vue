@@ -85,6 +85,44 @@
         >
           🌐 Custom Domain
         </router-link>
+
+        <!-- Website Builder Section - Only for tenant users -->
+        <template v-if="!authStore.isPlatformAdmin && (authStore.user?.role === 'admin' || authStore.user?.role === 'editor')">
+          <div class="border-t border-gray-700 my-2"></div>
+          <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase">Website Builder</div>
+          
+          <router-link
+            to="/admin/site-settings"
+            class="block px-4 py-2 rounded hover:bg-gray-800 transition"
+            :class="{ 'bg-gray-700': route.name === 'SiteSettings' }"
+          >
+            🎨 Site Settings
+          </router-link>
+          
+          <router-link
+            to="/admin/pages"
+            class="block px-4 py-2 rounded hover:bg-gray-800 transition"
+            :class="{ 'bg-gray-700': route.name === 'Pages' || route.name === 'PageEditor' }"
+          >
+            📄 Pages
+          </router-link>
+          
+          <router-link
+            to="/admin/navigation"
+            class="block px-4 py-2 rounded hover:bg-gray-800 transition"
+            :class="{ 'bg-gray-700': route.name === 'Navigation' }"
+          >
+            🔗 Navigation
+          </router-link>
+          
+          <router-link
+            to="/admin/product-settings"
+            class="block px-4 py-2 rounded hover:bg-gray-800 transition"
+            :class="{ 'bg-gray-700': route.name === 'ProductSettings' }"
+          >
+            🏷️ Product Display
+          </router-link>
+        </template>
       </nav>
 
       <!-- Bottom Section -->

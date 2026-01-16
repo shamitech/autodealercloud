@@ -18,6 +18,12 @@ import TenantDomainsView from '@/views/TenantDomainsView.vue'
 import ProductsView from '@/views/ProductsView.vue'
 import LightspeedView from '@/views/LightspeedView.vue'
 import ProfileView from '@/views/ProfileView.vue'
+// Website Builder Views
+import SiteSettingsView from '@/views/SiteSettingsView.vue'
+import PagesView from '@/views/PagesView.vue'
+import PageEditorView from '@/views/PageEditorView.vue'
+import NavigationView from '@/views/NavigationView.vue'
+import ProductSettingsView from '@/views/ProductSettingsView.vue'
 
 const routes = [
   {
@@ -99,6 +105,37 @@ const routes = [
     name: 'TenantDomains',
     component: TenantDomainsView,
     meta: { requiresAuth: true, roles: ['admin', 'member', 'editor'], skipTenantValidation: false },
+  },
+  // Website Builder Routes
+  {
+    path: '/admin/site-settings',
+    name: 'SiteSettings',
+    component: SiteSettingsView,
+    meta: { requiresAuth: true, roles: ['admin', 'editor'], skipTenantValidation: false },
+  },
+  {
+    path: '/admin/pages',
+    name: 'Pages',
+    component: PagesView,
+    meta: { requiresAuth: true, roles: ['admin', 'editor'], skipTenantValidation: false },
+  },
+  {
+    path: '/admin/pages/:id/edit',
+    name: 'PageEditor',
+    component: PageEditorView,
+    meta: { requiresAuth: true, roles: ['admin', 'editor'], skipTenantValidation: false },
+  },
+  {
+    path: '/admin/navigation',
+    name: 'Navigation',
+    component: NavigationView,
+    meta: { requiresAuth: true, roles: ['admin', 'editor'], skipTenantValidation: false },
+  },
+  {
+    path: '/admin/product-settings',
+    name: 'ProductSettings',
+    component: ProductSettingsView,
+    meta: { requiresAuth: true, roles: ['admin', 'editor'], skipTenantValidation: false },
   },
   {
     path: '/admin/profile',
