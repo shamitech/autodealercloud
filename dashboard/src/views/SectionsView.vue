@@ -423,7 +423,7 @@ onMounted(() => {
   display: grid;
   grid-template-columns: 280px 1fr;
   gap: 0;
-  min-height: calc(100vh - 140px);
+  height: calc(100vh - 140px);
 }
 
 .sections-panel {
