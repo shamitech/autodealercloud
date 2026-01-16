@@ -41,14 +41,14 @@
           <draggable
             v-else
             v-model="currentItems"
-            item-key="id"
+            item-key="tempId"
             handle=".drag-handle"
             ghost-class="ghost"
             @end="onDragEnd"
             class="nav-items-list"
           >
             <template #item="{ element, index }">
-              <div class="nav-item" :class="{ expanded: expandedItem === element.id }">
+              <div class="nav-item" :class="{ expanded: expandedItem === element.tempId }">
                 <div class="nav-item-header">
                   <span class="drag-handle">⋮⋮</span>
                   <span class="item-label">{{ element.label }}</span>
@@ -56,8 +56,8 @@
                   <div class="item-actions">
                     <button
                       class="action-btn"
-                      @click="toggleExpand(element.id)"
-                      :title="expandedItem === element.id ? 'Collapse' : 'Edit'"
+                      @click="toggleExpand(element.tempId)"
+                      :title="expandedItem === element.tempId ? 'Collapse' : 'Edit'"
                     >
                       {{ expandedItem === element.id ? '▲' : '▼' }}
                     </button>
@@ -72,7 +72,7 @@
                 </div>
 
                 <!-- Expanded Edit Form -->
-                <div v-if="expandedItem === element.id" class="nav-item-form">
+                <div v-if="expandedItem === element.tempId" class="nav-item-form">
                   <div class="form-grid">
                     <div class="form-group">
                       <label>Label</label>
@@ -247,7 +247,7 @@ function generateId() {
 
 function addItem() {
   const newItem = {
-    id: generateId(),
+    tempId: generateId(), // For React key only, not sent to backend
     label: 'New Item',
     link_type: 'url',
     url: '',
@@ -259,7 +259,7 @@ function addItem() {
     children: [],
   }
   currentItems.value.push(newItem)
-  expandedItem.value = newItem.id
+  expandedItem.value = newItem.tempId
 }
 
 function removeItem(index) {
@@ -354,8 +354,17 @@ async function saveNavigation() {
     await api.post('/navigation/bulk-save', {
       location: 'header',
       items: headerItems.value.map((item, index) => ({
-        ...item,
+        label: item.label,
+        link_type: item.link_type,
+        page_id: item.page_id || null,
+        url: item.url || null,
+        inventory_filters: item.inventory_filters || null,
         order: index,
+        is_visible: item.is_visible ?? true,
+        open_in_new_tab: item.open_in_new_tab ?? false,
+        is_highlighted: item.is_highlighted ?? false,
+        highlight_color: item.highlight_color || null,
+        children: item.children || [],
       })),
     })
 
@@ -363,8 +372,17 @@ async function saveNavigation() {
     await api.post('/navigation/bulk-save', {
       location: 'footer',
       items: footerItems.value.map((item, index) => ({
-        ...item,
+        label: item.label,
+        link_type: item.link_type,
+        page_id: item.page_id || null,
+        url: item.url || null,
+        inventory_filters: item.inventory_filters || null,
         order: index,
+        is_visible: item.is_visible ?? true,
+        open_in_new_tab: item.open_in_new_tab ?? false,
+        is_highlighted: item.is_highlighted ?? false,
+        highlight_color: item.highlight_color || null,
+        children: item.children || [],
       })),
     })
 
