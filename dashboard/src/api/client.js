@@ -61,6 +61,14 @@ apiClient.interceptors.request.use((config) => {
       config.headers.Authorization = `Bearer ${token}`
     }
   }
+  
+  // Log POST requests with data for debugging
+  if (config.method === 'post' && config.data) {
+    console.log('API POST Request:', config.url)
+    console.log('Request Data:', config.data)
+    console.log('Request Data (JSON):', JSON.stringify(config.data, null, 2))
+  }
+  
   return config
 })
 

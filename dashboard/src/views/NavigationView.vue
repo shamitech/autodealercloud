@@ -360,6 +360,13 @@ async function loadNavigation() {
 async function saveNavigation() {
   saving.value = true
   try {
+    // Check if we have any items
+    if (headerItems.value.length === 0 && footerItems.value.length === 0) {
+      alert('Please add at least one menu item before saving.')
+      saving.value = false
+      return
+    }
+    
     const headerPayload = {
       location: 'header',
       items: headerItems.value.map((item, index) => ({
@@ -401,11 +408,19 @@ async function saveNavigation() {
     console.log('Full header items:', JSON.stringify(headerItems.value, null, 2))
     console.log('Full footer items:', JSON.stringify(footerItems.value, null, 2))
     
-    // Save header navigation
-    await api.post('/navigation/bulk-save', headerPayload)
+    // Save header navigation (only if items exist)
+    if (headerItems.value.length > 0) {
+      console.log('Saving header navigation...')
+      await api.post('/navigation/bulk-save', headerPayload)
+      console.log('Header navigation saved successfully')
+    }
 
-    // Save footer navigation
-    await api.post('/navigation/bulk-save', footerPayload)
+    // Save footer navigation (only if items exist)
+    if (footerItems.value.length > 0) {
+      console.log('Saving footer navigation...')
+      await api.post('/navigation/bulk-save', footerPayload)
+      console.log('Footer navigation saved successfully')
+    }
 
     alert('Navigation saved successfully!')
   } catch (err) {
