@@ -1,7 +1,7 @@
 <template>
   <div class="flex h-screen bg-gray-100">
     <!-- Sidebar -->
-    <div class="w-64 bg-gray-900 text-white flex flex-col">
+    <div class="w-64 bg-gray-900 text-white flex flex-col overflow-y-auto">
       <div class="p-6 border-b border-gray-700">
         <h1 class="text-2xl font-bold">AutoDealer</h1>
         <p class="text-sm text-gray-300">Admin Dashboard</p>
