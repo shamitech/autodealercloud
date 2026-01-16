@@ -431,7 +431,7 @@ onMounted(() => {
   border-right: 1px solid #E5E7EB;
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 140px);
+  height: 100%;
   overflow-y: auto;
 }
 
