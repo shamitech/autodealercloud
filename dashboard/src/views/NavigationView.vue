@@ -396,6 +396,10 @@ async function saveNavigation() {
     
     console.log('Sending header payload:', headerPayload)
     console.log('Sending footer payload:', footerPayload)
+    console.log('Header items count:', headerItems.value.length)
+    console.log('Footer items count:', footerItems.value.length)
+    console.log('Full header items:', JSON.stringify(headerItems.value, null, 2))
+    console.log('Full footer items:', JSON.stringify(footerItems.value, null, 2))
     
     // Save header navigation
     await api.post('/navigation/bulk-save', headerPayload)
@@ -407,12 +411,15 @@ async function saveNavigation() {
   } catch (err) {
     console.error('Error saving navigation:', err)
     console.error('Response status:', err.response?.status)
+    console.error('Full response:', err.response)
     console.error('Response data:', err.response?.data)
+    console.log('Response data JSON:', JSON.stringify(err.response?.data, null, 2))
     
     // Extract validation errors
     let errorMessage = 'Failed to save navigation'
     if (err.response?.data?.errors) {
       const errors = err.response.data.errors
+      console.log('Extracted errors object:', errors)
       const errorList = Object.entries(errors)
         .map(([key, messages]) => `${key}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
         .join('\n')
