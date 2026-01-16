@@ -3,23 +3,29 @@
 namespace App\Http\Controllers;
 
 use App\Models\Section;
-use App\Models\Tenant;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class SectionController extends Controller
 {
+    /**
+     * Get the tenant ID from config (set by middleware)
+     */
+    protected function getTenantId()
+    {
+        return config('app.tenant_id');
+    }
+
     /**
      * Get all sections for the tenant
      */
     public function index()
     {
-        $tenant = auth()->user()->tenant;
-        if (!$tenant) {
-            return response()->json(['error' => 'Tenant not found'], 403);
+        $tenantId = $this->getTenantId();
+        if (!$tenantId) {
+            return response()->json(['error' => 'Tenant not identified'], 403);
         }
 
-        $sections = Section::where('tenant_id', $tenant->id)
+        $sections = Section::where('tenant_id', $tenantId)
             ->orderBy('order')
             ->get();
 
@@ -31,9 +37,9 @@ class SectionController extends Controller
      */
     public function save(Request $request)
     {
-        $tenant = auth()->user()->tenant;
-        if (!$tenant) {
-            return response()->json(['error' => 'Tenant not found'], 403);
+        $tenantId = $this->getTenantId();
+        if (!$tenantId) {
+            return response()->json(['error' => 'Tenant not identified'], 403);
         }
 
         $validated = $request->validate([
@@ -48,7 +54,7 @@ class SectionController extends Controller
             foreach ($validated['sections'] as $index => $sectionData) {
                 // If section has an ID and it's numeric, it's an existing section
                 if (isset($sectionData['id']) && is_numeric($sectionData['id'])) {
-                    $section = Section::where('tenant_id', $tenant->id)
+                    $section = Section::where('tenant_id', $tenantId)
                         ->find($sectionData['id']);
                     
                     if ($section) {
@@ -61,7 +67,7 @@ class SectionController extends Controller
                 } else {
                     // Create new section
                     Section::create([
-                        'tenant_id' => $tenant->id,
+                        'tenant_id' => $tenantId,
                         'name' => $sectionData['name'],
                         'components' => $sectionData['components'] ?? [],
                         'order' => $sectionData['order'] ?? $index,
@@ -80,12 +86,12 @@ class SectionController extends Controller
      */
     public function destroy($id)
     {
-        $tenant = auth()->user()->tenant;
-        if (!$tenant) {
-            return response()->json(['error' => 'Tenant not found'], 403);
+        $tenantId = $this->getTenantId();
+        if (!$tenantId) {
+            return response()->json(['error' => 'Tenant not identified'], 403);
         }
 
-        $section = Section::where('tenant_id', $tenant->id)->find($id);
+        $section = Section::where('tenant_id', $tenantId)->find($id);
         if (!$section) {
             return response()->json(['error' => 'Section not found'], 404);
         }
