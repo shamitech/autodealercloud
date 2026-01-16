@@ -274,7 +274,13 @@ async function saveSections() {
           // We'll use the section name as the location identifier
           const location = section.name.toLowerCase().replace(/\s+/g, '-')
           
-          const headerPayload = {
+          // Only save if there are items
+          if (!component.data || component.data.length === 0) {
+            console.log(`Skipping empty menu for section: ${section.name}`)
+            continue
+          }
+          
+          const payload = {
             location: location,
             items: component.data.map((item, index) => ({
               label: item.label,
@@ -291,7 +297,12 @@ async function saveSections() {
             })),
           }
           
-          await api.post('/navigation/bulk-save', headerPayload)
+          console.log(`Saving menu for section: ${section.name}`)
+          console.log('Location:', location)
+          console.log('Payload:', JSON.stringify(payload, null, 2))
+          
+          await api.post('/navigation/bulk-save', payload)
+          console.log(`Menu saved for section: ${section.name}`)
         }
       }
     }
@@ -299,8 +310,23 @@ async function saveSections() {
     alert('Sections saved successfully!')
   } catch (err) {
     console.error('Error saving sections:', err)
-    console.error('Response:', err.response?.data)
-    alert('Failed to save sections: ' + (err.response?.data?.message || err.message))
+    console.error('Response status:', err.response?.status)
+    console.error('Response data:', err.response?.data)
+    console.log('Response data JSON:', JSON.stringify(err.response?.data, null, 2))
+    
+    let errorMessage = 'Failed to save sections'
+    if (err.response?.data?.errors) {
+      const errors = err.response.data.errors
+      console.log('Validation errors:', errors)
+      const errorList = Object.entries(errors)
+        .map(([key, messages]) => `${key}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+        .join('\n')
+      errorMessage = `Validation errors:\n${errorList}`
+    } else if (err.response?.data?.message) {
+      errorMessage = err.response.data.message
+    }
+    
+    alert(errorMessage)
   } finally {
     saving.value = false
   }
