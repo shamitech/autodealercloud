@@ -90,6 +90,13 @@
                 + Add
               </button>
             </div>
+            <div class="component-option">
+              <h4>Container</h4>
+              <p>Group components together for layout control</p>
+              <button class="btn btn-secondary btn-sm" @click="addComponentToSection('container')">
+                + Add
+              </button>
+            </div>
           </div>
 
           <!-- Active Components -->
@@ -103,13 +110,31 @@
               >
                 <div class="component-header">
                   <span class="component-type">{{ formatComponentType(component.type) }}</span>
-                  <button
-                    class="btn-remove"
-                    @click="removeComponentFromSection(activeSection, compIndex)"
-                    title="Remove component"
-                  >
-                    ✕
-                  </button>
+                  <div class="component-actions">
+                    <button
+                      class="btn-move"
+                      @click="moveComponentUp(activeSection, compIndex)"
+                      :disabled="compIndex === 0"
+                      title="Move up"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      class="btn-move"
+                      @click="moveComponentDown(activeSection, compIndex)"
+                      :disabled="compIndex === sections[activeSection].components.length - 1"
+                      title="Move down"
+                    >
+                      ↓
+                    </button>
+                    <button
+                      class="btn-remove"
+                      @click="removeComponentFromSection(activeSection, compIndex)"
+                      title="Remove component"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
 
                 <!-- Menu Items Component -->
@@ -141,6 +166,14 @@
                   :model-value="component.data"
                   @update:model-value="updateComponentData(activeSection, compIndex, $event)"
                 />
+
+                <!-- Container Component -->
+                <ContainerComponent
+                  v-if="component.type === 'container'"
+                  :model-value="component.data"
+                  :pages="pages"
+                  @update:model-value="updateComponentData(activeSection, compIndex, $event)"
+                />
               </div>
             </div>
           </div>
@@ -169,6 +202,7 @@ import MenuItems from '../components/MenuItems.vue'
 import LogoComponent from '../components/LogoComponent.vue'
 import SearchComponent from '../components/SearchComponent.vue'
 import SocialComponent from '../components/SocialComponent.vue'
+import ContainerComponent from '../components/ContainerComponent.vue'
 
 const loading = ref(true)
 const saving = ref(false)
@@ -238,7 +272,7 @@ function addComponentToSection(type) {
   const component = {
     id: generateId(),
     type: type,
-    data: type === 'menu-items' ? [] : {},
+    data: type === 'menu-items' ? [] : type === 'container' ? { name: 'New Container', components: [] } : {},
   }
 
   sections.value[activeSection.value].components.push(component)
@@ -248,6 +282,22 @@ function removeComponentFromSection(sectionIndex, componentIndex) {
   if (confirm('Remove this component?')) {
     sections.value[sectionIndex].components.splice(componentIndex, 1)
   }
+}
+
+function moveComponentUp(sectionIndex, componentIndex) {
+  if (componentIndex === 0) return
+  const components = sections.value[sectionIndex].components
+  const temp = components[componentIndex]
+  components[componentIndex] = components[componentIndex - 1]
+  components[componentIndex - 1] = temp
+}
+
+function moveComponentDown(sectionIndex, componentIndex) {
+  const components = sections.value[sectionIndex].components
+  if (componentIndex === components.length - 1) return
+  const temp = components[componentIndex]
+  components[componentIndex] = components[componentIndex + 1]
+  components[componentIndex + 1] = temp
 }
 
 function updateComponentData(sectionIndex, componentIndex, newData) {
@@ -260,6 +310,7 @@ function formatComponentType(type) {
     'logo': '🏷️ Logo',
     'search': '🔍 Search',
     'social': '👥 Social Links',
+    'container': '📦 Container',
   }
   return types[type] || type
 }
@@ -622,28 +673,71 @@ onMounted(() => {
   border-bottom: 1px solid #E5E7EB;
 }
 
+.component-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #F3F4F6;
+  border-bottom: 1px solid #E5E7EB;
+}
+
 .component-type {
   font-size: 0.875rem;
   font-weight: 600;
   color: #374151;
 }
 
-.btn-remove {
-  width: 24px;
-  height: 24px;
-  border: none;
-  background: transparent;
-  color: #EF4444;
+.component-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.btn-move {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #D1D5DB;
+  background: white;
+  color: #6B7280;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 0.875rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
+}
+
+.btn-move:hover:not(:disabled) {
+  background: #F0F9FF;
+  border-color: #3B82F6;
+  color: #3B82F6;
+}
+
+.btn-move:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-remove {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #FCA5A5;
+  background: #FEE2E2;
+  color: #EF4444;
+  cursor: pointer;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
 }
 
 .btn-remove:hover {
-  background: #FEE2E2;
-  border-radius: 0.25rem;
+  background: #FECACA;
+  border-color: #EF4444;
 }
 
 .no-selection {
