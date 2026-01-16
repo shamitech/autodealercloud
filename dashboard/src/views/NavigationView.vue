@@ -133,101 +133,27 @@
                     </div>
                   </div>
 
-                  <!-- Dropdown Children -->
+                  <!-- Dropdown Children - using recursive component -->
                   <div v-if="element.link_type === 'dropdown'" class="dropdown-children">
-                    <h4>Tier 2 Items</h4>
+                    <div class="dropdown-children-header">
+                      <h4>Tier 2 Items</h4>
+                      <button class="btn btn-secondary btn-sm" @click="addChild(element)">
+                        + Add Tier 2 Item
+                      </button>
+                    </div>
                     <div v-if="!element.children || element.children.length === 0" class="empty-dropdown">
                       <p>No tier 2 items yet.</p>
                     </div>
                     <div v-else class="dropdown-items">
-                      <template v-for="(child, childIndex) in element.children" :key="childIndex">
-                        <div class="dropdown-item">
-                          <div class="item-row">
-                            <input v-model="child.label" type="text" placeholder="Tier 2 Label" />
-                            <select v-model="child.link_type" class="link-type-select">
-                              <option value="url">URL</option>
-                              <option value="page">Page</option>
-                              <option value="inventory">Inventory</option>
-                              <option value="anchor">Anchor</option>
-                              <option value="dropdown">Submenu</option>
-                            </select>
-                            <input 
-                              v-if="child.link_type === 'url' || child.link_type === 'anchor'" 
-                              v-model="child.url" 
-                              type="text" 
-                              :placeholder="child.link_type === 'anchor' ? 'Anchor ID' : 'URL'" 
-                            />
-                            <select 
-                              v-if="child.link_type === 'page'" 
-                              v-model="child.page_id"
-                              class="page-select"
-                            >
-                              <option value="">-- Select Page --</option>
-                              <option v-for="page in pages" :key="page.id" :value="page.id">
-                                {{ page.title }}
-                              </option>
-                            </select>
-                            <button 
-                              class="action-btn delete" 
-                              @click="removeChild(element, childIndex)"
-                              title="Delete"
-                            >
-                              🗑️
-                            </button>
-                          </div>
-                          
-                          <!-- Tier 3 Items (children of children) -->
-                          <div v-if="child.link_type === 'dropdown'" class="tier-3-section">
-                            <div class="tier-3-header">
-                              <h5>Tier 3 Items</h5>
-                              <button class="btn btn-tertiary btn-xs" @click="addGrandchild(element, childIndex)">
-                                + Add Tier 3
-                              </button>
-                            </div>
-                            <div v-if="!child.children || child.children.length === 0" class="empty-tier-3">
-                              <p>No tier 3 items yet.</p>
-                            </div>
-                            <div v-else class="tier-3-items">
-                              <div v-for="(grandchild, grandchildIndex) in child.children" :key="grandchildIndex" class="tier-3-item">
-                                <input v-model="grandchild.label" type="text" placeholder="Tier 3 Label" />
-                                <select v-model="grandchild.link_type" class="link-type-select">
-                                  <option value="url">URL</option>
-                                  <option value="page">Page</option>
-                                  <option value="inventory">Inventory</option>
-                                  <option value="anchor">Anchor</option>
-                                </select>
-                                <input 
-                                  v-if="grandchild.link_type === 'url' || grandchild.link_type === 'anchor'" 
-                                  v-model="grandchild.url" 
-                                  type="text" 
-                                  :placeholder="grandchild.link_type === 'anchor' ? 'Anchor ID' : 'URL'" 
-                                />
-                                <select 
-                                  v-if="grandchild.link_type === 'page'" 
-                                  v-model="grandchild.page_id"
-                                  class="page-select"
-                                >
-                                  <option value="">-- Select Page --</option>
-                                  <option v-for="page in pages" :key="page.id" :value="page.id">
-                                    {{ page.title }}
-                                  </option>
-                                </select>
-                                <button 
-                                  class="action-btn delete" 
-                                  @click="removeGrandchild(element, childIndex, grandchildIndex)"
-                                  title="Delete"
-                                >
-                                  🗑️
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </template>
+                      <NavigationTierItem
+                        v-for="(child, childIndex) in element.children"
+                        :key="childIndex"
+                        :item="child"
+                        :depth="2"
+                        :pages="pages"
+                        @remove="removeChild(element, childIndex)"
+                      />
                     </div>
-                    <button class="btn btn-secondary btn-sm" @click="addChild(element)">
-                      + Add Tier 2 Item
-                    </button>
                   </div>
                 </div>
               </div>
@@ -293,6 +219,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import draggable from 'vuedraggable'
 import api from '../api/client'
+import NavigationTierItem from '../components/NavigationTierItem.vue'
 
 const loading = ref(true)
 const saving = ref(false)
@@ -379,24 +306,6 @@ function addChild(parent) {
 
 function removeChild(parent, index) {
   parent.children.splice(index, 1)
-}
-
-function addGrandchild(parent, childIndex) {
-  const child = parent.children[childIndex]
-  if (!child.children) child.children = []
-  child.children.push({
-    label: 'Tier 3 Item',
-    link_type: 'url',
-    url: '',
-    page_id: '',
-  })
-}
-
-function removeGrandchild(parent, childIndex, grandchildIndex) {
-  const child = parent.children[childIndex]
-  if (child.children) {
-    child.children.splice(grandchildIndex, 1)
-  }
 }
 
 function onDragEnd() {
@@ -805,10 +714,17 @@ onMounted(() => {
   border-top: 1px solid #E5E7EB;
 }
 
-.dropdown-children h4 {
+.dropdown-children-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.dropdown-children-header h4 {
   font-size: 0.8125rem;
   font-weight: 600;
-  margin: 0 0 0.75rem 0;
+  margin: 0;
   color: #374151;
 }
 
@@ -867,92 +783,6 @@ onMounted(() => {
   height: 28px;
   font-size: 1rem;
   flex-shrink: 0;
-}
-
-/* Tier 3 Styles */
-.tier-3-section {
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid #D1D5DB;
-}
-
-.tier-3-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-}
-
-.tier-3-header h5 {
-  font-size: 0.75rem;
-  font-weight: 600;
-  margin: 0;
-  color: #6B7280;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.tier-3-items {
-  margin-left: 1rem;
-  padding-left: 0.75rem;
-  border-left: 2px solid #E5E7EB;
-}
-
-.tier-3-item {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-  padding: 0.5rem;
-  background: #FAFBFC;
-  border-radius: 0.25rem;
-  align-items: center;
-}
-
-.tier-3-item input,
-.tier-3-item .link-type-select,
-.tier-3-item .page-select {
-  padding: 0.375rem 0.5rem;
-  border: 1px solid #E5E7EB;
-  border-radius: 0.25rem;
-  font-size: 0.75rem;
-}
-
-.tier-3-item input {
-  flex: 1;
-}
-
-.tier-3-item .link-type-select {
-  width: 90px;
-}
-
-.tier-3-item .page-select {
-  flex: 1;
-}
-
-.tier-3-item .action-btn {
-  width: 24px;
-  height: 24px;
-  font-size: 0.875rem;
-  flex-shrink: 0;
-}
-
-.btn-tertiary {
-  background: #6B7280;
-  color: white;
-  border: none;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  font-size: 0.75rem;
-  cursor: pointer;
-}
-
-.btn-tertiary:hover {
-  background: #4B5563;
-}
-
-.btn-xs {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
 }
 
 /* Preview Panel */
