@@ -11,7 +11,7 @@
     </div>
 
     <div v-else class="sections-content">
-      <!-- Sections List -->
+      <!-- Sections List & Components -->
       <div class="sections-panel">
         <div class="panel-header">
           <h2>Sections</h2>
@@ -25,65 +25,63 @@
         </div>
 
         <div v-else class="sections-list">
-          <div
-            v-for="(section, index) in sections"
-            :key="index"
-            class="section-card"
-            :class="{ active: activeSection === index }"
-            @click="activeSection = index"
-          >
-            <div class="section-card-header">
-              <h3>{{ section.name }}</h3>
-              <span class="component-count">{{ section.components?.length || 0 }} components</span>
-            </div>
-            <button
-              class="btn-delete"
-              @click.stop="removeSection(index)"
-              title="Delete section"
+          <template v-for="(section, index) in sections" :key="index">
+            <!-- Section Card -->
+            <div
+              class="section-card"
+              :class="{ active: activeSection === index }"
+              @click="activeSection = index"
             >
-              🗑️
-            </button>
-          </div>
-        </div>
-      </div>
+              <div class="section-card-header">
+                <h3>{{ section.name }}</h3>
+                <span class="component-count">{{ section.components?.length || 0 }} components</span>
+              </div>
+              <button
+                class="btn-delete"
+                @click.stop="removeSection(index)"
+                title="Delete section"
+              >
+                🗑️
+              </button>
+            </div>
 
-      <!-- Component Toolbar -->
-      <div class="components-toolbar">
-        <button
-          class="component-btn"
-          @click="addComponentToSection('menu-items')"
-          title="Add Menu Items"
-        >
-          📋
-        </button>
-        <button
-          class="component-btn"
-          @click="addComponentToSection('logo')"
-          title="Add Logo"
-        >
-          🏷️
-        </button>
-        <button
-          class="component-btn"
-          @click="addComponentToSection('search')"
-          title="Add Search"
-        >
-          🔍
-        </button>
-        <button
-          class="component-btn"
-          @click="addComponentToSection('social')"
-          title="Add Social Links"
-        >
-          👥
-        </button>
-        <button
-          class="component-btn"
-          @click="addComponentToSection('container')"
-          title="Add Container"
-        >
-          📦
-        </button>
+            <!-- Component Cards (shown when section is selected) -->
+            <div v-if="activeSection === index" class="component-cards-container">
+              <div class="component-cards">
+                <div class="component-card" @click="addComponentToSection('menu-items')">
+                  <div class="card-icon">📋</div>
+                  <h4>Menu Items</h4>
+                  <p>Navigation menu</p>
+                  <button class="btn btn-sm btn-primary">+ Add</button>
+                </div>
+                <div class="component-card" @click="addComponentToSection('logo')">
+                  <div class="card-icon">🏷️</div>
+                  <h4>Logo</h4>
+                  <p>Company logo</p>
+                  <button class="btn btn-sm btn-primary">+ Add</button>
+                </div>
+                <div class="component-card" @click="addComponentToSection('search')">
+                  <div class="card-icon">🔍</div>
+                  <h4>Search</h4>
+                  <p>Search function</p>
+                  <button class="btn btn-sm btn-primary">+ Add</button>
+                </div>
+                <div class="component-card" @click="addComponentToSection('social')">
+                  <div class="card-icon">👥</div>
+                  <h4>Social</h4>
+                  <p>Social links</p>
+                  <button class="btn btn-sm btn-primary">+ Add</button>
+                </div>
+                <div class="component-card" @click="addComponentToSection('container')">
+                  <div class="card-icon">📦</div>
+                  <h4>Container</h4>
+                  <p>Group components</p>
+                  <button class="btn btn-sm btn-primary">+ Add</button>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
       </div>
 
       <!-- Section Editor -->
@@ -423,7 +421,7 @@ onMounted(() => {
 
 .sections-content {
   display: grid;
-  grid-template-columns: 280px 70px 1fr;
+  grid-template-columns: 280px 1fr;
   gap: 0;
   min-height: calc(100vh - 140px);
 }
@@ -453,42 +451,66 @@ onMounted(() => {
   color: #111827;
 }
 
-.components-toolbar {
-  background: #F9FAFB;
-  border-right: 1px solid #E5E7EB;
+.component-cards-container {
+  padding: 0 0.5rem 0.5rem 0.5rem;
+  background: #F0F4F8;
+  border-radius: 0 0 0.5rem 0.5rem;
+  margin: -0.5rem 0.5rem 0.5rem 0.5rem;
+}
+
+.component-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.component-card {
+  background: white;
+  border: 1px solid #D1D5DB;
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
   display: flex;
   flex-direction: column;
+  gap: 0.25rem;
   align-items: center;
-  padding: 0.75rem 0;
-  gap: 0.5rem;
-  max-height: calc(100vh - 140px);
-  overflow-y: auto;
+  font-size: 0.85rem;
 }
 
-.component-btn {
-  width: 50px;
-  height: 50px;
-  border: 1px solid #D1D5DB;
-  background: white;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  font-size: 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
-
-.component-btn:hover {
-  background: #EFF6FF;
+.component-card:hover {
   border-color: #3B82F6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  background: #F8FBFF;
 }
 
-.component-btn:active {
-  background: #DBEAFE;
+.card-icon {
+  font-size: 1.5rem;
+  line-height: 1;
 }
+
+.component-card h4 {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.component-card p {
+  margin: 0;
+  font-size: 0.7rem;
+  color: #6B7280;
+}
+
+.component-card .btn {
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+
 
 .empty-sections {
   padding: 2rem 1.5rem;
