@@ -47,6 +47,45 @@
         </div>
       </div>
 
+      <!-- Component Toolbar -->
+      <div class="components-toolbar">
+        <button
+          class="component-btn"
+          @click="addComponentToSection('menu-items')"
+          title="Add Menu Items"
+        >
+          📋
+        </button>
+        <button
+          class="component-btn"
+          @click="addComponentToSection('logo')"
+          title="Add Logo"
+        >
+          🏷️
+        </button>
+        <button
+          class="component-btn"
+          @click="addComponentToSection('search')"
+          title="Add Search"
+        >
+          🔍
+        </button>
+        <button
+          class="component-btn"
+          @click="addComponentToSection('social')"
+          title="Add Social Links"
+        >
+          👥
+        </button>
+        <button
+          class="component-btn"
+          @click="addComponentToSection('container')"
+          title="Add Container"
+        >
+          📦
+        </button>
+      </div>
+
       <!-- Section Editor -->
       <div v-if="activeSection !== null && sections[activeSection]" class="section-editor">
         <div class="editor-header">
@@ -60,44 +99,7 @@
 
         <!-- Components in this section -->
         <div class="components-section">
-          <h3>Components</h3>
-          <div class="available-components">
-            <div class="component-option">
-              <h4>Menu Items</h4>
-              <p>Navigation menu with infinite tier support</p>
-              <button class="btn btn-secondary btn-sm" @click="addComponentToSection('menu-items')">
-                + Add
-              </button>
-            </div>
-            <div class="component-option">
-              <h4>Logo</h4>
-              <p>Upload and display your business logo</p>
-              <button class="btn btn-secondary btn-sm" @click="addComponentToSection('logo')">
-                + Add
-              </button>
-            </div>
-            <div class="component-option">
-              <h4>Search</h4>
-              <p>Add a search bar to your section</p>
-              <button class="btn btn-secondary btn-sm" @click="addComponentToSection('search')">
-                + Add
-              </button>
-            </div>
-            <div class="component-option">
-              <h4>Social Links</h4>
-              <p>Display your social media profiles</p>
-              <button class="btn btn-secondary btn-sm" @click="addComponentToSection('social')">
-                + Add
-              </button>
-            </div>
-            <div class="component-option">
-              <h4>Container</h4>
-              <p>Group components together for layout control</p>
-              <button class="btn btn-secondary btn-sm" @click="addComponentToSection('container')">
-                + Add
-              </button>
-            </div>
-          </div>
+          <h3>Components in this section</h3>
 
           <!-- Active Components -->
           <div v-if="sections[activeSection].components && sections[activeSection].components.length > 0" class="active-components">
@@ -421,7 +423,7 @@ onMounted(() => {
 
 .sections-content {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: 280px 70px 1fr;
   gap: 0;
   min-height: calc(100vh - 140px);
 }
@@ -449,6 +451,43 @@ onMounted(() => {
   font-size: 1rem;
   font-weight: 600;
   color: #111827;
+}
+
+.components-toolbar {
+  background: #F9FAFB;
+  border-right: 1px solid #E5E7EB;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem 0;
+  gap: 0.5rem;
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
+}
+
+.component-btn {
+  width: 50px;
+  height: 50px;
+  border: 1px solid #D1D5DB;
+  background: white;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.component-btn:hover {
+  background: #EFF6FF;
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.component-btn:active {
+  background: #DBEAFE;
 }
 
 .empty-sections {
