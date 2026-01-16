@@ -23,6 +23,7 @@ import SiteSettingsView from '@/views/SiteSettingsView.vue'
 import PagesView from '@/views/PagesView.vue'
 import PageEditorView from '@/views/PageEditorView.vue'
 import NavigationView from '@/views/NavigationView.vue'
+import SectionsView from '@/views/SectionsView.vue'
 import ProductSettingsView from '@/views/ProductSettingsView.vue'
 
 const routes = [
@@ -129,6 +130,12 @@ const routes = [
     path: '/admin/navigation',
     name: 'Navigation',
     component: NavigationView,
+    meta: { requiresAuth: true, roles: ['admin', 'editor'], skipTenantValidation: false },
+  },
+  {
+    path: '/admin/sections',
+    name: 'Sections',
+    component: SectionsView,
     meta: { requiresAuth: true, roles: ['admin', 'editor'], skipTenantValidation: false },
   },
   {

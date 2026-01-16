@@ -112,7 +112,15 @@
             class="block px-4 py-2 rounded hover:bg-gray-800 transition"
             :class="{ 'bg-gray-700': route.name === 'Navigation' }"
           >
-            🔗 Navigation
+            🔗 Navigation (Legacy)
+          </router-link>
+          
+          <router-link
+            to="/admin/sections"
+            class="block px-4 py-2 rounded hover:bg-gray-800 transition"
+            :class="{ 'bg-gray-700': route.name === 'Sections' }"
+          >
+            📦 Website Sections
           </router-link>
           
           <router-link
