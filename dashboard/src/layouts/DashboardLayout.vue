@@ -8,7 +8,7 @@
         <p class="text-xs text-gray-400 mt-2">{{ authStore.user?.name }}</p>
       </div>
       
-      <nav class="flex-1 p-4 space-y-2">
+      <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
         <!-- Platform Admin Section -->
         <template v-if="authStore.isPlatformAdmin">
           <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase">Platform</div>
