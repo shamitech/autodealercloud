@@ -114,31 +114,45 @@
             backdrop-filter: blur(10px);
             padding: 20px;
             color: white;
-            text-align: center;
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 20px;
+        }
+        
+        .header-title {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .header-title h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .header-title p {
+            margin: 5px 0 0 0;
+            font-size: 14px;
+            opacity: 0.9;
         }
         
         .logout-btn {
             background: rgba(255, 255, 255, 0.2);
             color: white;
-            padding: 8px 16px;
+            padding: 10px 20px;
             border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 4px;
             cursor: pointer;
             font-size: 14px;
+            font-weight: 600;
             transition: background 0.3s;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
         
         .logout-btn:hover {
             background: rgba(255, 255, 255, 0.3);
-        }
-        
-        .header-title {
-            flex: 1;
-            text-align: center;
         }
         
         .container {
@@ -565,11 +579,14 @@
                 
                 const result = await response.json();
                 
-                if (response.ok && result.tenants) {
-                    if (result.tenants.length === 0) {
+                if (response.ok) {
+                    // Handle both array and object with tenants property
+                    const tenants = Array.isArray(result) ? result : (result.tenants || []);
+                    
+                    if (tenants.length === 0) {
                         list.innerHTML = '<p style="text-align: center; color: #999;">No tenants yet. Create one to get started!</p>';
                     } else {
-                        list.innerHTML = result.tenants.map(tenant => `
+                        list.innerHTML = tenants.map(tenant => `
                             <div class="tenant-item">
                                 <h4>${tenant.name}</h4>
                                 <p><strong>Email:</strong> ${tenant.email}</p>
@@ -579,13 +596,17 @@
                             </div>
                         `).join('');
                     }
+                    message.className = 'message';
                 } else {
                     message.className = 'message error';
-                    message.textContent = '✗ Failed to load tenants';
+                    message.textContent = '✗ Failed to load tenants: ' + (result.message || 'Unknown error');
+                    list.innerHTML = '';
                 }
             } catch (error) {
                 message.className = 'message error';
                 message.textContent = '✗ Error: ' + error.message;
+                list.innerHTML = '';
+                console.error('Error loading tenants:', error);
             } finally {
                 loading.classList.remove('active');
             }
