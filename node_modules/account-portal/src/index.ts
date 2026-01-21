@@ -21,6 +21,11 @@ const db = new Database(
 app.use(cors());
 app.use(express.json());
 
+// Root route
+app.get('/', (req: Request, res: Response) => {
+  res.json({ message: 'Account Portal API', status: 'running', port: PORT });
+});
+
 // Routes
 app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'Account Portal is running' });

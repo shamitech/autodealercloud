@@ -19,6 +19,11 @@ const db = new Database(
 app.use(cors());
 app.use(express.json());
 
+// Root route
+app.get('/', (req: Request, res: Response) => {
+  res.json({ message: 'Core CMS API', status: 'running', port: PORT });
+});
+
 // Routes
 app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'Core CMS is running' });
