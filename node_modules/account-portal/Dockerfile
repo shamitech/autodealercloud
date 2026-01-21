@@ -16,5 +16,5 @@ COPY services/account-portal/tsconfig.json ./tsconfig-service.json
 # Expose port
 EXPOSE 3002
 
-# Start service
-CMD ["npm", "start"]
+# Start service from root, cd into service dir and run
+CMD ["sh", "-c", "cd services/account-portal && npm start"]

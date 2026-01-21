@@ -16,5 +16,5 @@ COPY services/domain-router/tsconfig.json ./tsconfig-service.json
 # Expose port
 EXPOSE 80
 
-# Start service
-CMD ["npm", "start"]
+# Start service from root, cd into service dir and run
+CMD ["sh", "-c", "cd services/domain-router && npm start"]

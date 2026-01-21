@@ -16,5 +16,5 @@ COPY services/core-cms/tsconfig.json ./tsconfig-service.json
 # Expose port
 EXPOSE 3001
 
-# Start service
-CMD ["npm", "start"]
+# Start service from root, cd into service dir and run
+CMD ["sh", "-c", "cd services/core-cms && npm start"]
