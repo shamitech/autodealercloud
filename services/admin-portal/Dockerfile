@@ -15,14 +15,13 @@ COPY tsconfig.json ./
 COPY services/admin-portal/package.json ./services/admin-portal/
 COPY services/admin-portal/tsconfig.json ./services/admin-portal/
 
-# Install service-specific dependencies
+# Install service-specific dependencies in its own node_modules
 WORKDIR /app/services/admin-portal
 RUN npm install
 
-# Link service node_modules types back to root for TypeScript compiler
+# Install @types packages at root level so TypeScript compiler can find them
 WORKDIR /app
-RUN ln -sf services/admin-portal/node_modules/@types node_modules/@types-admin 2>/dev/null || true
-RUN cp -r services/admin-portal/node_modules/@types/* node_modules/ 2>/dev/null || true
+RUN npm install --save-dev @types/cors@2.8.17 @types/uuid@9.0.7 @types/socket.io@3.0.2
 
 # Now copy application source code
 COPY services/admin-portal/src ./services/admin-portal/src

@@ -15,14 +15,13 @@ COPY tsconfig.json ./
 COPY services/core-cms/package.json ./services/core-cms/
 COPY services/core-cms/tsconfig.json ./services/core-cms/
 
-# Install service-specific dependencies
+# Install service-specific dependencies in its own node_modules
 WORKDIR /app/services/core-cms
 RUN npm install
 
-# Link service node_modules types back to root for TypeScript compiler
+# Install @types packages at root level so TypeScript compiler can find them
 WORKDIR /app
-RUN ln -sf services/core-cms/node_modules/@types node_modules/@types-core 2>/dev/null || true
-RUN cp -r services/core-cms/node_modules/@types/* node_modules/ 2>/dev/null || true
+RUN npm install --save-dev @types/cors@2.8.17 @types/uuid@9.0.7 @types/socket.io@3.0.2
 
 # Now copy application source code
 COPY services/core-cms/src ./services/core-cms/src
