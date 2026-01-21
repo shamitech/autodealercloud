@@ -10,11 +10,12 @@ RUN npm install
 
 # Copy application code
 COPY services/account-portal/src ./src
+COPY services/account-portal/package.json ./services/account-portal/
 COPY tsconfig.json ./
 COPY services/account-portal/tsconfig.json ./tsconfig-service.json
 
 # Expose port
 EXPOSE 3002
 
-# Start service from root, cd into service dir and run
-CMD ["sh", "-c", "cd services/account-portal && npm start"]
+# Start service using npm --prefix to use service package.json
+CMD ["npm", "--prefix", "services/account-portal", "start"]

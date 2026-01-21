@@ -10,11 +10,12 @@ RUN npm install
 
 # Copy application code
 COPY services/domain-router/src ./src
+COPY services/domain-router/package.json ./services/domain-router/
 COPY tsconfig.json ./
 COPY services/domain-router/tsconfig.json ./tsconfig-service.json
 
 # Expose port
 EXPOSE 80
 
-# Start service from root, cd into service dir and run
-CMD ["sh", "-c", "cd services/domain-router && npm start"]
+# Start service using npm --prefix to use service package.json
+CMD ["npm", "--prefix", "services/domain-router", "start"]
