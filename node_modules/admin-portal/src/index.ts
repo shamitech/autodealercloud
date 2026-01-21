@@ -1,4 +1,5 @@
 import express, { Express, Request, Response } from 'express';
+import path from 'path';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import { Database } from './database/db';
@@ -19,6 +20,9 @@ const db = new Database(
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Serve static files from public directory
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Root route
 app.get('/', (req: Request, res: Response) => {
