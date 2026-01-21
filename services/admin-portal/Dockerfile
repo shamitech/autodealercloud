@@ -26,6 +26,9 @@ RUN npm install --save-dev @types/cors@2.8.17 @types/uuid@9.0.7 @types/socket.io
 # Now copy application source code
 COPY services/admin-portal/src ./services/admin-portal/src
 
+# Copy public folder (HTML/CSS/JS assets)
+COPY services/admin-portal/public ./services/admin-portal/public
+
 # Build the TypeScript for this service
 RUN npm run build --prefix services/admin-portal
 
