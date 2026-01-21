@@ -9,10 +9,13 @@ COPY package.json package-lock.json ./
 RUN npm install
 
 # Copy application code
-COPY services/core-cms/src ./src
+COPY services/core-cms/src ./services/core-cms/src
 COPY services/core-cms/package.json ./services/core-cms/
 COPY tsconfig.json ./
-COPY services/core-cms/tsconfig.json ./tsconfig-service.json
+COPY services/core-cms/tsconfig.json ./services/core-cms/
+
+# Build the TypeScript for this service
+RUN npm run build --prefix services/core-cms
 
 # Expose port
 EXPOSE 3001

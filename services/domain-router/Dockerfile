@@ -9,10 +9,13 @@ COPY package.json package-lock.json ./
 RUN npm install
 
 # Copy application code
-COPY services/domain-router/src ./src
+COPY services/domain-router/src ./services/domain-router/src
 COPY services/domain-router/package.json ./services/domain-router/
 COPY tsconfig.json ./
-COPY services/domain-router/tsconfig.json ./tsconfig-service.json
+COPY services/domain-router/tsconfig.json ./services/domain-router/
+
+# Build the TypeScript for this service
+RUN npm run build --prefix services/domain-router
 
 # Expose port
 EXPOSE 80

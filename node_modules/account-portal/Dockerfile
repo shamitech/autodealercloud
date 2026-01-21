@@ -9,10 +9,13 @@ COPY package.json package-lock.json ./
 RUN npm install
 
 # Copy application code
-COPY services/account-portal/src ./src
+COPY services/account-portal/src ./services/account-portal/src
 COPY services/account-portal/package.json ./services/account-portal/
 COPY tsconfig.json ./
-COPY services/account-portal/tsconfig.json ./tsconfig-service.json
+COPY services/account-portal/tsconfig.json ./services/account-portal/
+
+# Build the TypeScript for this service
+RUN npm run build --prefix services/account-portal
 
 # Expose port
 EXPOSE 3002
