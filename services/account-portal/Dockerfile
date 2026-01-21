@@ -5,14 +5,23 @@ WORKDIR /app
 # Copy root package files
 COPY package.json package-lock.json ./
 
-# Install dependencies
+# Install root dependencies (this installs workspace dependencies too)
 RUN npm install
 
-# Copy application code
+# Copy application code for this service
 COPY services/account-portal/src ./services/account-portal/src
 COPY services/account-portal/package.json ./services/account-portal/
-COPY tsconfig.json ./
 COPY services/account-portal/tsconfig.json ./services/account-portal/
+
+# Copy root tsconfig
+COPY tsconfig.json ./
+
+# Install service-specific dependencies
+WORKDIR /app/services/account-portal
+RUN npm install
+
+# Go back to app root for building
+WORKDIR /app
 
 # Build the TypeScript for this service
 RUN npm run build --prefix services/account-portal

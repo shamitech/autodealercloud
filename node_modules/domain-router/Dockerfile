@@ -5,14 +5,23 @@ WORKDIR /app
 # Copy root package files
 COPY package.json package-lock.json ./
 
-# Install dependencies
+# Install root dependencies (this installs workspace dependencies too)
 RUN npm install
 
-# Copy application code
+# Copy application code for this service
 COPY services/domain-router/src ./services/domain-router/src
 COPY services/domain-router/package.json ./services/domain-router/
-COPY tsconfig.json ./
 COPY services/domain-router/tsconfig.json ./services/domain-router/
+
+# Copy root tsconfig
+COPY tsconfig.json ./
+
+# Install service-specific dependencies
+WORKDIR /app/services/domain-router
+RUN npm install
+
+# Go back to app root for building
+WORKDIR /app
 
 # Build the TypeScript for this service
 RUN npm run build --prefix services/domain-router
