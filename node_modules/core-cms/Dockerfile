@@ -2,22 +2,18 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy root package files
-COPY package*.json ./
-
-# Copy service package files
-COPY services/core-cms/package*.json ./services/core-cms/
+# Copy package files
+COPY package.json package-lock.json ./
 
 # Install dependencies
 RUN npm install
 
 # Copy application code
-COPY services/core-cms/src ./services/core-cms/src
+COPY src ./src
 COPY tsconfig.json ./
-COPY services/core-cms/tsconfig.json ./services/core-cms/
 
 # Expose port
 EXPOSE 3001
 
 # Start service
-CMD ["npm", "run", "start:core-cms"]
+CMD ["npm", "start"]

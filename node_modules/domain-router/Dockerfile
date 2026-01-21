@@ -2,22 +2,18 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy root package files
-COPY package*.json ./
-
-# Copy service package files
-COPY services/domain-router/package*.json ./services/domain-router/
+# Copy package files
+COPY package.json package-lock.json ./
 
 # Install dependencies
 RUN npm install
 
 # Copy application code
-COPY services/domain-router/src ./services/domain-router/src
+COPY src ./src
 COPY tsconfig.json ./
-COPY services/domain-router/tsconfig.json ./services/domain-router/
 
 # Expose port
 EXPOSE 80
 
 # Start service
-CMD ["npm", "run", "start:domain-router"]
+CMD ["npm", "start"]

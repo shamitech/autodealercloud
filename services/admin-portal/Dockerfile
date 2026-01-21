@@ -2,22 +2,18 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy root package files
-COPY package*.json ./
-
-# Copy service package files
-COPY services/admin-portal/package*.json ./services/admin-portal/
+# Copy package files
+COPY package.json package-lock.json ./
 
 # Install dependencies
 RUN npm install
 
 # Copy application code
-COPY services/admin-portal/src ./services/admin-portal/src
+COPY src ./src
 COPY tsconfig.json ./
-COPY services/admin-portal/tsconfig.json ./services/admin-portal/
 
 # Expose port
 EXPOSE 3003
 
 # Start service
-CMD ["npm", "run", "start:admin-portal"]
+CMD ["npm", "start"]
