@@ -1,0 +1,30 @@
+{
+  "name": "core-cms",
+  "version": "1.0.0",
+  "description": "Core CMS engine for AutoDealerCloud",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "ts-node src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "pg": "^8.9.0",
+    "socket.io": "^4.5.4",
+    "dotenv": "^16.0.3",
+    "cors": "^2.8.5",
+    "uuid": "^9.0.0",
+    "jsonwebtoken": "^9.0.0",
+    "bcryptjs": "^2.4.3"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/pg": "^8.9.0",
+    "@types/uuid": "^9.0.7",
+    "@types/bcryptjs": "^2.4.2",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^20.10.5",
+    "typescript": "^5.3.3"
+  }
+}

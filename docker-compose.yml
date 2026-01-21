@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  postgres-core:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: autodealercloud
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-core-data:/var/lib/postgresql/data
+
+  postgres-account:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: autodealercloud_account
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-account-data:/var/lib/postgresql/data
+
+  postgres-admin:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: autodealercloud_admin
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-admin-data:/var/lib/postgresql/data
+
+  core-cms:
+    build:
+      context: ./services/core-cms
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      DATABASE_URL: postgresql://user:password@postgres-core:5432/autodealercloud
+      NODE_ENV: development
+    depends_on:
+      - postgres-core
+
+  account-portal:
+    build:
+      context: ./services/account-portal
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: 3002
+      DATABASE_URL: postgresql://user:password@postgres-account:5432/autodealercloud_account
+      NODE_ENV: development
+      JWT_SECRET: dev-secret-key
+    depends_on:
+      - postgres-account
+
+  admin-portal:
+    build:
+      context: ./services/admin-portal
+    ports:
+      - "3003:3003"
+    environment:
+      PORT: 3003
+      DATABASE_URL: postgresql://user:password@postgres-admin:5432/autodealercloud_admin
+      NODE_ENV: development
+      JWT_SECRET: dev-admin-secret-key
+      ADMIN_API_KEY: dev-api-key
+    depends_on:
+      - postgres-admin
+
+  domain-router:
+    build:
+      context: ./services/domain-router
+    ports:
+      - "80:80"
+    depends_on:
+      - core-cms
+      - account-portal
+      - admin-portal
+
+volumes:
+  postgres-core-data:
+  postgres-account-data:
+  postgres-admin-data:

@@ -1,0 +1,22 @@
+{
+  "name": "autodealercloud",
+  "version": "1.0.0",
+  "description": "Cloud-based CMS for Auto Dealerships",
+  "private": true,
+  "workspaces": [
+    "services/core-cms",
+    "services/account-portal",
+    "services/admin-portal",
+    "services/domain-router"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces",
+    "build": "npm run build --workspaces",
+    "start": "npm start --workspaces"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "ts-node": "^10.9.1",
+    "@types/node": "^20.10.5"
+  }
+}
