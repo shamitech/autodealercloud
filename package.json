@@ -12,7 +12,9 @@
   "scripts": {
     "dev": "npm run dev --workspaces",
     "build": "npm run build --workspaces",
-    "start": "npm start --workspaces"
+    "start": "npm start --workspaces",
+    "init:db": "ts-node scripts/init-db.ts",
+    "init:db:status": "ts-node scripts/init-db.ts -- --status"
   },
   "devDependencies": {
     "typescript": "^5.3.3",
