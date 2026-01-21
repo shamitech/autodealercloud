@@ -76,16 +76,17 @@ services:
     depends_on:
       - postgres-admin
 
-  domain-router:
-    build:
-      context: .
-      dockerfile: services/domain-router/Dockerfile
-    ports:
-      - "80:80"
-    depends_on:
-      - core-cms
-      - account-portal
-      - admin-portal
+  # domain-router is handled by Nginx proxy instead
+  # domain-router:
+  #   build:
+  #     context: .
+  #     dockerfile: services/domain-router/Dockerfile
+  #   ports:
+  #     - "80:80"
+  #   depends_on:
+  #     - core-cms
+  #     - account-portal
+  #     - admin-portal
 
 volumes:
   postgres-core-data:
