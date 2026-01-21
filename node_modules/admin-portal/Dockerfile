@@ -19,8 +19,12 @@ COPY services/admin-portal/tsconfig.json ./services/admin-portal/
 WORKDIR /app/services/admin-portal
 RUN npm install
 
-# Now copy application source code
+# Link service node_modules types back to root for TypeScript compiler
 WORKDIR /app
+RUN ln -sf services/admin-portal/node_modules/@types node_modules/@types-admin 2>/dev/null || true
+RUN cp -r services/admin-portal/node_modules/@types/* node_modules/ 2>/dev/null || true
+
+# Now copy application source code
 COPY services/admin-portal/src ./services/admin-portal/src
 
 # Build the TypeScript for this service

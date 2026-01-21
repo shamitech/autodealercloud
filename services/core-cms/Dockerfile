@@ -19,8 +19,12 @@ COPY services/core-cms/tsconfig.json ./services/core-cms/
 WORKDIR /app/services/core-cms
 RUN npm install
 
-# Now copy application source code
+# Link service node_modules types back to root for TypeScript compiler
 WORKDIR /app
+RUN ln -sf services/core-cms/node_modules/@types node_modules/@types-core 2>/dev/null || true
+RUN cp -r services/core-cms/node_modules/@types/* node_modules/ 2>/dev/null || true
+
+# Now copy application source code
 COPY services/core-cms/src ./services/core-cms/src
 
 # Build the TypeScript for this service
