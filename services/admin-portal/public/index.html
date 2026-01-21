@@ -19,6 +19,96 @@
             flex-direction: column;
         }
         
+        .login-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 400px;
+            width: 100%;
+        }
+        
+        .login-card h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .login-card p {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .login-form-group {
+            margin-bottom: 20px;
+        }
+        
+        .login-form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+        
+        .login-form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .login-form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .login-button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .login-button:hover {
+            background: #5568d3;
+        }
+        
+        .login-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .login-error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
         .header {
             background: rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(10px);
@@ -26,6 +116,29 @@
             color: white;
             text-align: center;
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .header-title {
+            flex: 1;
+            text-align: center;
         }
         
         .container {
@@ -220,10 +333,39 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Admin Portal</h1>
-        <p>Tenant Management System</p>
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-card">
+            <h1>Admin Portal</h1>
+            <p>Tenant Management System</p>
+            
+            <div class="login-error" id="loginError"></div>
+            
+            <form id="loginForm">
+                <div class="login-form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required autocomplete="username" placeholder="Enter your username">
+                </div>
+                
+                <div class="login-form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Enter your password">
+                </div>
+                
+                <button type="submit" class="login-button" id="loginButton">Login</button>
+            </form>
+        </div>
     </div>
+    
+    <!-- Main Interface -->
+    <div class="hidden" id="mainInterface">
+        <div class="header">
+            <div class="header-title">
+                <h1>Admin Portal</h1>
+                <p>Tenant Management System</p>
+            </div>
+            <button class="logout-btn" id="logoutBtn">Logout</button>
+        </div>
     
     <div class="container">
         <div class="main-grid">
@@ -290,22 +432,73 @@
     <div class="footer">
         <p>AutoDealerCloud Admin Portal &copy; 2026</p>
     </div>
+    </div>
     
     <script>
         const API_BASE = window.location.origin;
+        const VALID_USERNAME = 'jaredshami';
+        const VALID_PASSWORD = 'Children$6';
         
-        // Load tenants on page load
+        // Check if user is logged in on page load
         window.addEventListener('load', () => {
-            loadTenants();
+            const isLoggedIn = sessionStorage.getItem('adminLoggedIn');
+            if (isLoggedIn === 'true') {
+                showMainInterface();
+                loadTenants();
+            } else {
+                showLoginScreen();
+            }
         });
+        
+        // Login form submission
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            handleLogin();
+        });
+        
+        // Logout button
+        document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+        
+        function handleLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
+            const loginButton = document.getElementById('loginButton');
+            
+            // Simple client-side validation (backend should also validate)
+            if (username === VALID_USERNAME && password === VALID_PASSWORD) {
+                sessionStorage.setItem('adminLoggedIn', 'true');
+                errorDiv.style.display = 'none';
+                showMainInterface();
+                loadTenants();
+            } else {
+                errorDiv.textContent = '✗ Invalid username or password';
+                errorDiv.style.display = 'block';
+                document.getElementById('password').value = '';
+            }
+        }
+        
+        function handleLogout() {
+            sessionStorage.removeItem('adminLoggedIn');
+            document.getElementById('loginForm').reset();
+            showLoginScreen();
+        }
+        
+        function showLoginScreen() {
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('mainInterface').classList.add('hidden');
+        }
+        
+        function showMainInterface() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainInterface').classList.remove('hidden');
+        }
         
         // Form submission
         document.getElementById('createTenantForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             createTenant();
         });
-        
-        async function createTenant() {
             const form = document.getElementById('createTenantForm');
             const loading = document.getElementById('createLoading');
             const message = document.getElementById('createMessage');
