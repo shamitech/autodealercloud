@@ -2,15 +2,16 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files
+# Copy root package files
 COPY package.json package-lock.json ./
 
 # Install dependencies
 RUN npm install
 
 # Copy application code
-COPY src ./src
+COPY services/domain-router/src ./src
 COPY tsconfig.json ./
+COPY services/domain-router/tsconfig.json ./tsconfig-service.json
 
 # Expose port
 EXPOSE 80
