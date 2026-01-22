@@ -20,7 +20,8 @@ export class AdminAuthService {
   }
 
   async comparePassword(password: string, hash: string): Promise<boolean> {
-    return bcryptjs.compare(password, hash);
+    // Temporary: plain text comparison (FIXME: re-enable bcryptjs later)
+    return password === hash;
   }
 
   generateToken(payload: AdminJWTPayload, expiresIn: string = '7d'): string {

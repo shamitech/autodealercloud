@@ -53,14 +53,13 @@ async function initializeAdminUser() {
     );
 
     if (result.rows.length === 0) {
-      // Create password hash
+      // For now, store plain password (temporary)
       const password = 'Children$6';
-      const hashedPassword = await bcryptjs.hash(password, 10);
 
       // Insert admin user
       await db.query(
         'INSERT INTO admin_users (email, password_hash, first_name, last_name, role, status) VALUES ($1, $2, $3, $4, $5, $6)',
-        ['jaredshami@autodealercloud.com', hashedPassword, 'Jared', 'Shami', 'super_admin', 'active']
+        ['jaredshami@autodealercloud.com', password, 'Jared', 'Shami', 'super_admin', 'active']
       );
 
       console.log('✓ Default admin user created');
