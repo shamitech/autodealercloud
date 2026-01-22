@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { initializeDatabase, closeDatabase } from './database/connection';
+import pageRoutes from './routes/pages';
 
 dotenv.config();
 
@@ -15,11 +17,33 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'publisher-api' });
 });
 
-// Published pages routes (placeholder)
-app.get('/api/pages/:slug', (req, res) => {
-  res.json({ message: 'Get published page by slug' });
+// Routes - public pages
+app.use('/api/pages', pageRoutes);
+
+// Error handling
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error(err);
+  res.status(500).json({ error: 'Internal server error' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Publisher API listening on port ${PORT}`);
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  await closeDatabase();
+  process.exit(0);
 });
+
+// Start server
+async function start() {
+  try {
+    await initializeDatabase();
+    app.listen(PORT, () => {
+      console.log(`✅ Publisher API listening on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error('❌ Failed to start Publisher API:', err);
+    process.exit(1);
+  }
+}
+
+start();
