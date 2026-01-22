@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { DMSCredentials } from '../../../shared/types';
 
 export interface PublishSnapshot {
   pageId: string;

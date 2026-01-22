@@ -1,177 +1,62 @@
 import { query } from '../database/connection';
-import { Tenant, CreateTenantRequest, UpdateTenantRequest } from '../../../shared/types';
-import { generateTempPassword, generateId } from '../utils/crypto';
-import { createTenantDatabase, dropTenantDatabase } from '../database/tenant-provisioning';
-import { generateTenantNginxConfig, removeTenantNginxConfig, reloadNginx } from './NginxService';
+import { Tenant, CreateTenantRequest, UpdateTenantRequest } from '@shared/types';
+import { generateId } from '../utils/crypto';
 
-export async function getAllTenants(): Promise<Tenant[]> {
+export async function createTenant(data: CreateTenantRequest): Promise<Tenant> {
+  const id = generateId();
+  const now = new Date();
+
   const result = await query(
-    'SELECT id, name, slug, email, contact_first_name, contact_last_name, status, created_at, updated_at FROM tenants WHERE status != $1 ORDER BY created_at DESC',
-    ['deleted']
+    'INSERT INTO tenants (id, name, slug, email, contact_first_name, contact_last_name, status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
+    [id, data.name, data.slug, data.email, data.contact_first_name, data.contact_last_name, 'active', now, now]
   );
-  return result.rows;
+
+  return result.rows[0] as Tenant;
+}
+
+export async function getTenants(): Promise<Tenant[]> {
+  const result = await query('SELECT * FROM tenants WHERE status != $1 ORDER BY created_at DESC', ['deleted']);
+  return result.rows as Tenant[];
 }
 
 export async function getTenantById(id: string): Promise<Tenant | null> {
-  const result = await query(
-    'SELECT id, name, slug, email, contact_first_name, contact_last_name, status, temp_password, temp_password_expires_at, created_at, updated_at FROM tenants WHERE id = $1',
-    [id]
-  );
-  return result.rows[0] || null;
+  const result = await query('SELECT * FROM tenants WHERE id = $1', [id]);
+  return result.rows.length > 0 ? (result.rows[0] as Tenant) : null;
 }
 
-export async function getTenantBySlug(slug: string): Promise<Tenant | null> {
-  const result = await query(
-    'SELECT id, name, slug, email, contact_first_name, contact_last_name, status, created_at, updated_at FROM tenants WHERE slug = $1 AND status != $2',
-    [slug, 'deleted']
-  );
-  return result.rows[0] || null;
-}
+export async function updateTenant(id: string, data: UpdateTenantRequest): Promise<Tenant | null> {
+  const now = new Date();
+  const updates: string[] = [];
+  const values: unknown[] = [];
+  let paramCount = 1;
 
-export async function createTenant(tenantData: CreateTenantRequest): Promise<{ tenant: Tenant; tempPassword: string }> {
-  // Check if slug already exists
-  const existingSlug = await query('SELECT id FROM tenants WHERE slug = $1', [tenantData.slug]);
-  if (existingSlug.rows.length > 0) {
-    throw new Error('Slug already exists');
+  if (data.name !== undefined) {
+    updates.push(`name = $${paramCount++}`);
+    values.push(data.name);
+  }
+  if (data.email !== undefined) {
+    updates.push(`email = $${paramCount++}`);
+    values.push(data.email);
+  }
+  if (data.status !== undefined) {
+    updates.push(`status = $${paramCount++}`);
+    values.push(data.status);
   }
 
-  const id = generateId();
-  const tempPassword = generateTempPassword();
-  const tempPasswordExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
-  const result = await query(
-    `INSERT INTO tenants (id, name, slug, email, contact_first_name, contact_last_name, status, temp_password, temp_password_expires_at, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
-     RETURNING id, name, slug, email, contact_first_name, contact_last_name, status, created_at, updated_at`,
-    [
-      id,
-      tenantData.name,
-      tenantData.slug,
-      tenantData.email,
-      tenantData.contact_first_name,
-      tenantData.contact_last_name,
-      'active',
-      tempPassword,
-      tempPasswordExpiresAt,
-    ]
-  );
-
-  // Provision CMS database schema for new tenant
-  try {
-    await createTenantDatabase(id, tenantData.slug);
-  } catch (error) {
-    // Rollback tenant creation if database provisioning fails
-    await query('DELETE FROM tenants WHERE id = $1', [id]);
-    throw new Error(`Failed to provision tenant database: ${error}`);
-  }
-
-  // Generate Nginx configuration for tenant
-  try {
-    await generateTenantNginxConfig(tenantData.slug, process.env.DOMAIN || 'autodealercloud.com');
-    await reloadNginx();
-  } catch (error) {
-    console.error(`Failed to generate nginx config: ${error}`);
-    // Don't throw - nginx config generation is non-critical
-  }
-
-  return {
-    tenant: result.rows[0],
-    tempPassword,
-  };
-}
-
-export async function updateTenant(id: string, tenantData: UpdateTenantRequest): Promise<Tenant> {
-  const tenant = await getTenantById(id);
-  if (!tenant) {
-    throw new Error('Tenant not found');
-  }
-
-  const updateFields: string[] = [];
-  const updateValues: any[] = [];
-  let paramIndex = 1;
-
-  if (tenantData.name !== undefined) {
-    updateFields.push(`name = $${paramIndex++}`);
-    updateValues.push(tenantData.name);
-  }
-  if (tenantData.email !== undefined) {
-    updateFields.push(`email = $${paramIndex++}`);
-    updateValues.push(tenantData.email);
-  }
-  if (tenantData.contact_first_name !== undefined) {
-    updateFields.push(`contact_first_name = $${paramIndex++}`);
-    updateValues.push(tenantData.contact_first_name);
-  }
-  if (tenantData.contact_last_name !== undefined) {
-    updateFields.push(`contact_last_name = $${paramIndex++}`);
-    updateValues.push(tenantData.contact_last_name);
-  }
-  if (tenantData.status !== undefined) {
-    updateFields.push(`status = $${paramIndex++}`);
-    updateValues.push(tenantData.status);
-  }
-
-  if (updateFields.length === 0) {
-    return tenant;
-  }
-
-  updateFields.push(`updated_at = NOW()`);
-  updateValues.push(id);
+  updates.push(`updated_at = $${paramCount++}`);
+  values.push(now);
+  values.push(id);
 
   const result = await query(
-    `UPDATE tenants SET ${updateFields.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
-    updateValues
+    `UPDATE tenants SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING *`,
+    values
   );
 
-  return result.rows[0];
+  return result.rows.length > 0 ? (result.rows[0] as Tenant) : null;
 }
 
 export async function deleteTenant(id: string): Promise<boolean> {
-  const tenant = await getTenantById(id);
-  if (!tenant) {
-    throw new Error('Tenant not found');
-  }
-
-  // Drop tenant database schema first
-  try {
-    await dropTenantDatabase(tenant.slug);
-  } catch (error) {
-    console.error(`Failed to drop schema for ${tenant.slug}:`, error);
-    // Continue with soft delete even if schema drop fails
-  }
-
-  // Remove Nginx configuration
-  try {
-    await removeTenantNginxConfig(tenant.slug);
-    await reloadNginx();
-  } catch (error) {
-    console.error(`Failed to remove nginx config: ${error}`);
-    // Continue anyway
-  }
-
-  const result = await query('UPDATE tenants SET status = $1, updated_at = NOW() WHERE id = $2', [
-    'deleted',
-    id,
-  ]);
+  const now = new Date();
+  const result = await query('UPDATE tenants SET status = $1, updated_at = $2 WHERE id = $3', ['deleted', now, id]);
   return result.rowCount! > 0;
-}
-
-export async function resetTempPassword(id: string): Promise<{ tempPassword: string; expiresAt: Date }> {
-  const tenant = await getTenantById(id);
-  if (!tenant) {
-    throw new Error('Tenant not found');
-  }
-
-  const tempPassword = generateTempPassword();
-  const tempPasswordExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
-  await query(
-    'UPDATE tenants SET temp_password = $1, temp_password_expires_at = $2, updated_at = NOW() WHERE id = $3',
-    [tempPassword, tempPasswordExpiresAt, id]
-  );
-
-  return {
-    tempPassword,
-    expiresAt: tempPasswordExpiresAt,
-  };
 }

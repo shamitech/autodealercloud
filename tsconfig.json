@@ -10,21 +10,17 @@
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "declaration": true,
-    "declarationMap": true,
     "sourceMap": true,
     "noImplicitAny": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["shared/types/*"]
+      "@shared/*": ["shared/*"]
     }
   },
   "include": [
     "services/admin-api/**/*",
     "services/cms-api/**/*",
     "services/publisher-api/**/*",
-    "services/admin-dashboard/**/*",
-    "services/cms-dashboard/**/*",
-    "services/publisher/**/*",
     "shared/**/*"
   ],
   "exclude": [
@@ -32,13 +28,8 @@
     "dist",
     "services/*/node_modules",
     "services/*/dist",
-    "services/account-portal",
-    "services/admin-portal",
-    "services/domain-router",
-    "services/core-cms",
     ".next",
-    "build",
-    "coverage"
+    "build"
   ]
 }
 

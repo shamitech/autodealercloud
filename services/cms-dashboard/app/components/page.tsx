@@ -16,7 +16,7 @@ export default function ComponentsPage() {
   const fetchComponents = async () => {
     try {
       setLoading(true);
-      const response = await cmsApi.getComponents();
+      const response = await cmsApi.get('/components');
       setComponents(response.data);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to fetch components');
@@ -28,7 +28,7 @@ export default function ComponentsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this component?')) return;
     try {
-      await cmsApi.deleteComponent(id);
+      await cmsApi.delete(`/components/${id}`);
       setComponents(components.filter((c) => c.id !== id));
     } catch (err: any) {
       alert(err.response?.data?.error || 'Failed to delete');

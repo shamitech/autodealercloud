@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
-import { TokenPayload } from '../../shared/types';
+import { TokenPayload } from '@shared/types';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key-change-in-production';
 const TOKEN_EXPIRY = '24h';
@@ -26,16 +26,6 @@ export function verifyToken(token: string): TokenPayload | null {
   } catch (err) {
     return null;
   }
-}
-
-export function generateTempPassword(): string {
-  // Generate a 12-character temporary password
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%';
-  let password = '';
-  for (let i = 0; i < 12; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return password;
 }
 
 export function generateId(): string {

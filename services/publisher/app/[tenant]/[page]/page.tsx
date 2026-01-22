@@ -30,7 +30,7 @@ export default function PublishedPage() {
           return;
         }
 
-        const response = await publisherApi.getPageBySlug(tenantSlug, pageSlug);
+        const response = await publisherApi.get(`/pages/tenant/${tenantSlug}/${pageSlug}`);
         setPage(response.data);
       } catch (err: any) {
         if (err.response?.status === 404) {

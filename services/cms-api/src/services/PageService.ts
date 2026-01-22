@@ -1,150 +1,66 @@
 import { query } from '../database/connection';
+import { Page, PublishRequest } from '@shared/types';
 import { generateId } from '../utils/crypto';
-import { publishPageToPublisher, unpublishPageFromPublisher } from './PublishingService';
 
-export async function getAllPages(tenantId: string, status?: string) {
-  let sql = 'SELECT id, title, slug, status, published_at, created_at FROM pages WHERE tenant_id = $1';
-  const params: any[] = [tenantId];
-
-  if (status) {
-    sql += ' AND status = $2';
-    params.push(status);
-  }
-
-  sql += ' ORDER BY created_at DESC';
-
-  const result = await query(sql, params);
-  return result.rows;
-}
-
-export async function getPageById(tenantId: string, pageId: string) {
-  const result = await query(
-    `SELECT id, title, slug, description, content, meta_title, meta_description, meta_keywords, status, published_at, created_at, updated_at
-     FROM pages WHERE id = $1 AND tenant_id = $2`,
-    [pageId, tenantId]
-  );
-  return result.rows[0] || null;
-}
-
-export async function getPageBySlug(tenantId: string, slug: string) {
-  const result = await query(
-    `SELECT id, title, slug, description, content, meta_title, meta_description, meta_keywords, status, published_at
-     FROM pages WHERE slug = $1 AND tenant_id = $2`,
-    [slug, tenantId]
-  );
-  return result.rows[0] || null;
-}
-
-export async function createPage(tenantId: string, pageData: any, userId: string) {
+export async function createPage(tenantId: string, title: string, slug: string, content: Record<string, unknown>): Promise<Page> {
   const id = generateId();
+  const now = new Date();
 
   const result = await query(
-    `INSERT INTO pages (id, tenant_id, title, slug, description, content, meta_title, meta_description, meta_keywords, status, created_by_user_id, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
-     RETURNING id, title, slug, status, created_at`,
-    [
-      id,
-      tenantId,
-      pageData.title,
-      pageData.slug,
-      pageData.description,
-      pageData.content ? JSON.stringify(pageData.content) : null,
-      pageData.meta_title,
-      pageData.meta_description,
-      pageData.meta_keywords,
-      'draft',
-      userId,
-    ]
+    'INSERT INTO pages (id, tenant_id, title, slug, content, published, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+    [id, tenantId, title, slug, JSON.stringify(content), false, now, now]
   );
 
-  return result.rows[0];
+  return result.rows[0] as Page;
 }
 
-export async function updatePage(tenantId: string, pageId: string, pageData: any) {
-  const updateFields: string[] = [];
-  const updateValues: any[] = [];
-  let paramIndex = 1;
+export async function getPages(tenantId: string): Promise<Page[]> {
+  const result = await query('SELECT * FROM pages WHERE tenant_id = $1 ORDER BY created_at DESC', [tenantId]);
+  return result.rows as Page[];
+}
 
-  const allowedFields = ['title', 'slug', 'description', 'content', 'meta_title', 'meta_description', 'meta_keywords'];
+export async function getPageById(id: string): Promise<Page | null> {
+  const result = await query('SELECT * FROM pages WHERE id = $1', [id]);
+  return result.rows.length > 0 ? (result.rows[0] as Page) : null;
+}
 
-  for (const field of allowedFields) {
-    if (pageData[field] !== undefined) {
-      updateFields.push(`${field} = $${paramIndex++}`);
-      updateValues.push(field === 'content' ? JSON.stringify(pageData[field]) : pageData[field]);
-    }
+export async function updatePage(id: string, title?: string, content?: Record<string, unknown>): Promise<Page | null> {
+  const now = new Date();
+  const updates: string[] = [];
+  const values: unknown[] = [];
+  let paramCount = 1;
+
+  if (title !== undefined) {
+    updates.push(`title = $${paramCount++}`);
+    values.push(title);
+  }
+  if (content !== undefined) {
+    updates.push(`content = $${paramCount++}`);
+    values.push(JSON.stringify(content));
   }
 
-  if (updateFields.length === 0) {
-    return getPageById(tenantId, pageId);
-  }
-
-  updateFields.push(`updated_at = NOW()`);
-  updateValues.push(pageId);
-  updateValues.push(tenantId);
+  updates.push(`updated_at = $${paramCount++}`);
+  values.push(now);
+  values.push(id);
 
   const result = await query(
-    `UPDATE pages SET ${updateFields.join(', ')} WHERE id = $${paramIndex++} AND tenant_id = $${paramIndex} RETURNING *`,
-    updateValues
+    `UPDATE pages SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING *`,
+    values
   );
 
-  return result.rows[0] || null;
+  return result.rows.length > 0 ? (result.rows[0] as Page) : null;
 }
 
-export async function deletePage(tenantId: string, pageId: string) {
-  const result = await query('DELETE FROM pages WHERE id = $1 AND tenant_id = $2', [pageId, tenantId]);
+export async function publishPage(data: PublishRequest): Promise<boolean> {
+  const now = new Date();
+  const result = await query(
+    'UPDATE pages SET published = true, updated_at = $1 WHERE id = $2',
+    [now, data.page_id]
+  );
   return result.rowCount! > 0;
 }
 
-export async function publishPage(tenantId: string, pageId: string) {
-  // Get page data first
-  const pageData = await getPageById(tenantId, pageId);
-  if (!pageData) {
-    throw new Error('Page not found');
-  }
-
-  const result = await query(
-    `UPDATE pages SET status = 'published', published_at = NOW(), updated_at = NOW()
-     WHERE id = $1 AND tenant_id = $2
-     RETURNING id, title, slug, description, content, status, published_at`,
-    [pageId, tenantId]
-  );
-
-  const publishedPage = result.rows[0];
-  if (publishedPage) {
-    // Publish to publisher database
-    try {
-      await publishPageToPublisher(pageId, tenantId, publishedPage);
-    } catch (error) {
-      console.error('Failed to publish to publisher database:', error);
-      // Revert the publish status if publishing fails
-      await query(
-        `UPDATE pages SET status = 'draft', updated_at = NOW() WHERE id = $1 AND tenant_id = $2`,
-        [pageId, tenantId]
-      );
-      throw error;
-    }
-  }
-
-  return publishedPage;
-}
-
-export async function unpublishPage(tenantId: string, pageId: string) {
-  const result = await query(
-    `UPDATE pages SET status = 'draft', updated_at = NOW() WHERE id = $1 AND tenant_id = $2
-     RETURNING id, slug, status`,
-    [pageId, tenantId]
-  );
-
-  const unpublishedPage = result.rows[0];
-  if (unpublishedPage) {
-    // Remove from publisher database
-    try {
-      await unpublishPageFromPublisher(pageId);
-    } catch (error) {
-      console.error('Failed to unpublish from publisher:', error);
-      // Continue anyway, publisher DB will handle cleanup
-    }
-  }
-
-  return unpublishedPage;
+export async function deletePage(id: string): Promise<boolean> {
+  const result = await query('DELETE FROM pages WHERE id = $1', [id]);
+  return result.rowCount! > 0;
 }

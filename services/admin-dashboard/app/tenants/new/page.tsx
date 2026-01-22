@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { adminApi } from '@/lib/api-client';
+import axios from 'axios';
+
+const ADMIN_API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:3001/api';
 
 export default function CreateTenantPage() {
   const router = useRouter();
@@ -10,11 +12,8 @@ export default function CreateTenantPage() {
     name: '',
     slug: '',
     email: '',
-    contact_first_name: '',
-    contact_last_name: '',
   });
   const [error, setError] = useState('');
-  const [tempPassword, setTempPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -30,9 +29,13 @@ export default function CreateTenantPage() {
     setLoading(true);
 
     try {
-      const response = await adminApi.createTenant(formData);
-      setTempPassword(response.data.tempPassword);
-      alert(`Tenant created successfully! Temporary password: ${response.data.tempPassword}`);
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${ADMIN_API_URL}/tenants`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      alert(`Tenant created successfully!`);
       router.push('/tenants');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to create tenant');
@@ -46,7 +49,6 @@ export default function CreateTenantPage() {
       <h1 className="text-3xl font-bold mb-6">Create New Tenant</h1>
 
       {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>}
-      {tempPassword && <div className="mb-4 p-3 bg-green-100 text-green-700 rounded">Temp password: {tempPassword}</div>}
 
       <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow space-y-4">
         <div>
@@ -85,29 +87,6 @@ export default function CreateTenantPage() {
             required
             className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-            <input
-              type="text"
-              name="contact_first_name"
-              value={formData.contact_first_name}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-            <input
-              type="text"
-              name="contact_last_name"
-              value={formData.contact_last_name}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
         </div>
 
         <div className="flex space-x-2 pt-4">

@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { generateNginxConfig } from './nginx-generator';
+import { generateNginxConfig } from '../utils/nginx-generator';
 
 const NGINX_CONF_DIR = process.env.NGINX_CONF_DIR || '/etc/nginx/conf.d';
 

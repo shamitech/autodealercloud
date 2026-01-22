@@ -1,51 +1,40 @@
 import { query } from '../database/connection';
-import { AdminUser, LoginRequest } from '../../../shared/types';
-import { hashPassword, comparePasswords, generateToken } from '../utils/crypto';
+import { AdminUser, LoginRequest, TokenPayload } from '@shared/types';
+import { hashPassword, comparePasswords, generateToken, generateId } from '../utils/crypto';
 
-export async function loginAdmin(loginData: LoginRequest) {
-  const { email, password } = loginData;
-
-  const result = await query(
-    'SELECT id, email, password_hash FROM admin_users WHERE email = $1',
-    [email]
-  );
+export async function loginAdmin(email: string, password: string): Promise<{ user: AdminUser; token: string } | null> {
+  const result = await query('SELECT * FROM admin_users WHERE email = $1', [email]);
 
   if (result.rows.length === 0) {
-    throw new Error('Invalid email or password');
+    return null;
   }
 
-  const admin = result.rows[0];
-  const passwordMatch = await comparePasswords(password, admin.password_hash);
+  const user = result.rows[0] as AdminUser;
+  const passwordMatch = await comparePasswords(password, user.password_hash);
 
   if (!passwordMatch) {
-    throw new Error('Invalid email or password');
+    return null;
   }
 
-  const token = generateToken({
-    id: admin.id,
-    email: admin.email,
+  const payload: TokenPayload = {
+    id: user.id,
+    email: user.email,
     type: 'admin',
-  });
+  };
 
-  return { token, admin: { id: admin.id, email: admin.email } };
+  const token = generateToken(payload);
+  return { user, token };
 }
 
-export async function registerAdmin(email: string, password: string, firstName?: string, lastName?: string) {
-  const existingAdmin = await query('SELECT id FROM admin_users WHERE email = $1', [email]);
-
-  if (existingAdmin.rows.length > 0) {
-    throw new Error('Admin user already exists');
-  }
-
+export async function createAdmin(email: string, password: string, firstName?: string, lastName?: string): Promise<AdminUser> {
+  const id = generateId();
   const passwordHash = await hashPassword(password);
-  const id = require('uuid').v4();
+  const now = new Date();
 
   const result = await query(
-    `INSERT INTO admin_users (id, email, password_hash, first_name, last_name, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-     RETURNING id, email, first_name, last_name`,
-    [id, email, passwordHash, firstName, lastName]
+    'INSERT INTO admin_users (id, email, password_hash, first_name, last_name, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+    [id, email, passwordHash, firstName, lastName, now, now]
   );
 
-  return result.rows[0];
+  return result.rows[0] as AdminUser;
 }

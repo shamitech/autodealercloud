@@ -8,16 +8,16 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
+    setError('');
 
     try {
-      const response = await adminApi.login(email, password);
+      const response = await adminApi.post('/auth/login', { email, password });
       localStorage.setItem('admin_token', response.data.token);
       router.push('/dashboard');
     } catch (err: any) {
@@ -58,7 +58,7 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
       </div>

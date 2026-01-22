@@ -1,21 +1,10 @@
-import type { Metadata } from 'next';
-import './globals.css';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'AutoDealer Publisher',
-  description: 'Beautiful dealership websites',
-};
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function PublisherPage() {
   return (
-    <html lang="en">
-      <body className="bg-white">
-        {children}
-      </body>
-    </html>
+    <div className="min-h-screen bg-white">
+      <h1 className="text-4xl font-bold text-center py-12">Welcome to AutoDealerCloud Publisher</h1>
+      <p className="text-center text-gray-600">View published dealership content</p>
+    </div>
   );
 }

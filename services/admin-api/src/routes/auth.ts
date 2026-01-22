@@ -1,21 +1,22 @@
 import { Router, Request, Response } from 'express';
 import { loginAdmin } from '../services/AuthService';
-import { LoginRequest } from '../../../shared/types';
+import { LoginRequest } from '@shared/types';
 
 const router = Router();
 
 router.post('/login', async (req: Request, res: Response) => {
   try {
     const loginData: LoginRequest = req.body;
+    const result = await loginAdmin(loginData.email, loginData.password);
 
-    if (!loginData.email || !loginData.password) {
-      return res.status(400).json({ error: 'Email and password are required' });
+    if (!result) {
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const result = await loginAdmin(loginData);
     res.json(result);
-  } catch (error: any) {
-    res.status(401).json({ error: error.message });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Login failed' });
   }
 });
 

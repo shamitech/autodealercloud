@@ -1,45 +1,32 @@
 import { Pool } from 'pg';
 
-let pool: Pool;
+const pool = new Pool({
+  user: process.env.PUBLISHER_DB_USER || 'publisher_user',
+  password: process.env.PUBLISHER_DB_PASSWORD || 'publisher_password',
+  host: process.env.PUBLISHER_DB_HOST || 'localhost',
+  port: parseInt(process.env.PUBLISHER_DB_PORT || '5434'),
+  database: process.env.PUBLISHER_DB_NAME || 'publisher_db',
+});
 
-export async function initializeDatabase() {
-  pool = new Pool({
-    user: process.env.PUBLISHER_DB_USER || 'publisher_user',
-    password: process.env.PUBLISHER_DB_PASSWORD || 'publisher_password',
-    host: process.env.PUBLISHER_DB_HOST || 'localhost',
-    port: parseInt(process.env.PUBLISHER_DB_PORT || '5432'),
-    database: process.env.PUBLISHER_DB_NAME || 'publisher_db',
-  });
+pool.on('error', (err: Error) => {
+  console.error('Unexpected error on idle client', err);
+});
 
-  pool.on('error', (err) => {
-    console.error('Unexpected error on idle client', err);
-  });
-
+export async function initializeDatabase(): Promise<void> {
   try {
-    const client = await pool.connect();
-    console.log('✅ Connected to Publisher Database');
-    client.release();
-  } catch (err) {
-    console.error('❌ Failed to connect to Publisher Database:', err);
-    throw err;
+    const res = await pool.query('SELECT NOW()');
+    console.log('✅ Connected to Publisher Database', res.rows[0]);
+  } catch (error) {
+    console.error('❌ Failed to connect to Publisher Database:', error);
+    process.exit(1);
   }
 }
 
-export function getPool(): Pool {
-  if (!pool) {
-    throw new Error('Database pool not initialized. Call initializeDatabase() first.');
-  }
-  return pool;
+export async function query(text: string, params?: unknown[]): Promise<any> {
+  return pool.query(text, params);
 }
 
-export async function query(text: string, params?: any[]) {
-  const result = await getPool().query(text, params);
-  return result;
-}
-
-export async function closeDatabase() {
-  if (pool) {
-    await pool.end();
-    console.log('✅ Database connection closed');
-  }
+export async function closeDatabase(): Promise<void> {
+  await pool.end();
+  console.log('✅ Database connection closed');
 }

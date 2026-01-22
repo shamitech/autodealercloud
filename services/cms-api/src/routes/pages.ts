@@ -1,95 +1,79 @@
 import { Router, Request, Response } from 'express';
-import { tenantAuthMiddleware } from '../middleware/tenant-auth';
-import * as PageService from '../services/PageService';
+import { createPage, getPages, getPageById, updatePage, publishPage, deletePage } from '../services/PageService';
 
 const router = Router();
 
-router.use(tenantAuthMiddleware);
-
-// Get all pages
-router.get('/', async (req: Request, res: Response) => {
-  try {
-    const status = req.query.status as string | undefined;
-    const pages = await PageService.getAllPages(req.tenantId!, status);
-    res.json(pages);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get page by ID
-router.get('/:id', async (req: Request, res: Response) => {
-  try {
-    const page = await PageService.getPageById(req.tenantId!, req.params.id);
-    if (!page) {
-      return res.status(404).json({ error: 'Page not found' });
-    }
-    res.json(page);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Create page
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const page = await PageService.createPage(req.tenantId!, req.body, req.tenant!.id);
+    const { tenant_id, title, slug, content } = req.body;
+    const page = await createPage(tenant_id, title, slug, content);
     res.status(201).json(page);
-  } catch (error: any) {
-    res.status(400).json({ error: error.message });
+  } catch (error) {
+    console.error('Create page error:', error);
+    res.status(500).json({ error: 'Failed to create page' });
   }
 });
 
-// Update page
-router.put('/:id', async (req: Request, res: Response) => {
+router.get('/tenant/:tenant_id', async (req: Request, res: Response) => {
   try {
-    const page = await PageService.updatePage(req.tenantId!, req.params.id, req.body);
+    const pages = await getPages(req.params.tenant_id);
+    res.json(pages);
+  } catch (error) {
+    console.error('Get pages error:', error);
+    res.status(500).json({ error: 'Failed to get pages' });
+  }
+});
+
+router.get('/:id', async (req: Request, res: Response) => {
+  try {
+    const page = await getPageById(req.params.id);
     if (!page) {
       return res.status(404).json({ error: 'Page not found' });
     }
     res.json(page);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
+  } catch (error) {
+    console.error('Get page error:', error);
+    res.status(500).json({ error: 'Failed to get page' });
   }
 });
 
-// Delete page
-router.delete('/:id', async (req: Request, res: Response) => {
+router.patch('/:id', async (req: Request, res: Response) => {
   try {
-    const success = await PageService.deletePage(req.tenantId!, req.params.id);
-    if (success) {
-      res.json({ success: true });
-    } else {
-      res.status(404).json({ error: 'Page not found' });
+    const { title, content } = req.body;
+    const page = await updatePage(req.params.id, title, content);
+    if (!page) {
+      return res.status(404).json({ error: 'Page not found' });
     }
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.json(page);
+  } catch (error) {
+    console.error('Update page error:', error);
+    res.status(500).json({ error: 'Failed to update page' });
   }
 });
 
-// Publish page
 router.post('/:id/publish', async (req: Request, res: Response) => {
   try {
-    const page = await PageService.publishPage(req.tenantId!, req.params.id);
-    if (!page) {
+    const success = await publishPage({ page_id: req.params.id, title: '', slug: '', content: {} });
+    if (!success) {
       return res.status(404).json({ error: 'Page not found' });
     }
-    res.json(page);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.json({ message: 'Page published' });
+  } catch (error) {
+    console.error('Publish page error:', error);
+    res.status(500).json({ error: 'Failed to publish page' });
   }
 });
 
-// Unpublish page
-router.post('/:id/unpublish', async (req: Request, res: Response) => {
+router.delete('/:id', async (req: Request, res: Response) => {
   try {
-    const page = await PageService.unpublishPage(req.tenantId!, req.params.id);
-    if (!page) {
+    const success = await deletePage(req.params.id);
+    if (!success) {
       return res.status(404).json({ error: 'Page not found' });
     }
-    res.json(page);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.json({ message: 'Page deleted' });
+  } catch (error) {
+    console.error('Delete page error:', error);
+    res.status(500).json({ error: 'Failed to delete page' });
   }
 });
 

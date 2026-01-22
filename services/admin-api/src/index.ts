@@ -8,44 +8,33 @@ import tenantRoutes from './routes/tenants';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3010;
+const PORT = process.env.ADMIN_API_PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
 
-// Health check
+app.use('/api/auth', authRoutes);
+app.use('/api/tenants', tenantRoutes);
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'admin-api' });
 });
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/tenants', tenantRoutes);
-
-// Error handling
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err);
-  res.status(500).json({ error: 'Internal server error' });
-});
-
-// Graceful shutdown
-process.on('SIGTERM', async () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  await closeDatabase();
-  process.exit(0);
-});
-
-// Start server
-async function start() {
+async function start(): Promise<void> {
   try {
     await initializeDatabase();
     app.listen(PORT, () => {
-      console.log(`✅ Admin API listening on port ${PORT}`);
+      console.log(`✅ Admin API running on port ${PORT}`);
     });
-  } catch (err) {
-    console.error('❌ Failed to start Admin API:', err);
+  } catch (error) {
+    console.error('Failed to start Admin API:', error);
     process.exit(1);
   }
 }
+
+process.on('SIGTERM', async () => {
+  await closeDatabase();
+  process.exit(0);
+});
 
 start();

@@ -1,9 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import { getPool } from './connection';
+import { query } from './connection';
 
 export async function runMigrations(dbType: 'admin' | 'cms' | 'publisher') {
-  const pool = getPool();
   let migrationFile = '';
 
   if (dbType === 'admin') {
@@ -16,7 +15,7 @@ export async function runMigrations(dbType: 'admin' | 'cms' | 'publisher') {
 
   try {
     const sql = fs.readFileSync(migrationFile, 'utf-8');
-    await pool.query(sql);
+    await query(sql);
     console.log(`✅ Migration completed for ${dbType} database`);
   } catch (error) {
     console.error(`❌ Migration failed for ${dbType} database:`, error);

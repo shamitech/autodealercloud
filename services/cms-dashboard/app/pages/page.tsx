@@ -16,7 +16,7 @@ export default function PagesPage() {
   const fetchPages = async () => {
     try {
       setLoading(true);
-      const response = await cmsApi.getPages();
+      const response = await cmsApi.get('/pages');
       setPages(response.data);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to fetch pages');
@@ -28,7 +28,7 @@ export default function PagesPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this page?')) return;
     try {
-      await cmsApi.deletePage(id);
+      await cmsApi.delete(`/pages/${id}`);
       setPages(pages.filter((p) => p.id !== id));
     } catch (err: any) {
       alert(err.response?.data?.error || 'Failed to delete');
@@ -38,9 +38,9 @@ export default function PagesPage() {
   const handlePublish = async (id: string, isPublished: boolean) => {
     try {
       if (isPublished) {
-        await cmsApi.unpublishPage(id);
+        await cmsApi.post(`/pages/${id}/unpublish`);
       } else {
-        await cmsApi.publishPage(id);
+        await cmsApi.post(`/pages/${id}/publish`);
       }
       fetchPages();
     } catch (err: any) {

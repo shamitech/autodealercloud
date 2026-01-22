@@ -32,7 +32,7 @@ export default function CreatePagePage() {
         ...formData,
         content: JSON.parse(formData.content),
       };
-      await cmsApi.createPage(payload);
+      await cmsApi.post('/pages', payload);
       router.push('/pages');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to create page');
@@ -92,7 +92,7 @@ export default function CreatePagePage() {
             className="w-full px-3 py-2 border border-gray-300 rounded font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 h-40"
           />
           <p className="text-xs text-gray-500 mt-1">
-            Example: {"{\\"sections\\": [{\\"type\\": \\"hero\\", \\"componentId\\": \\"comp-123\\"}]"}
+            Example: {'{"sections": [{"type": "hero", "componentId": "comp-123"}]}'}
           </p>
         </div>
 
