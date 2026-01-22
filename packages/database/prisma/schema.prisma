@@ -1,0 +1,275 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// Core Tenant Models
+// ============================================
+
+model Tenant {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  description   String?
+  status        String   @default("active") // active, suspended, deleted
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  users         User[]
+  authDomain    AuthDomain?
+  publishDomain PublishDomain?
+  pages         Page[]
+  templates     PageTemplate[]
+  components    CustomComponent[]
+  analytics     AnalyticsEvent[]
+  domains       CustomDomain[]
+  content       Content[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  password      String
+  firstName     String
+  lastName      String
+  role          String   @default("editor") // admin, tenant-admin, editor
+  status        String   @default("active")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  tenantId      String?
+  tenant        Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([role])
+}
+
+// ============================================
+// Domain Models
+// ============================================
+
+model AuthDomain {
+  id        String   @id @default(cuid())
+  subdomain String   @unique // e.g., "myautodealership-auth"
+  domain    String   @default("autodealercloud.com")
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenantId  String   @unique
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+model PublishDomain {
+  id        String   @id @default(cuid())
+  subdomain String   @unique // e.g., "myautodealership-pub"
+  domain    String   @default("autodealercloud.com")
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenantId  String   @unique
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+model CustomDomain {
+  id        String   @id @default(cuid())
+  domain    String   @unique // e.g., "www.myautodealership.com" or "myautodealership.com"
+  type      String   @default("www") // www, root
+  ssl       Boolean  @default(false)
+  verified  Boolean  @default(false)
+  status    String   @default("pending") // pending, verified, failed
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([verified])
+}
+
+// ============================================
+// Component Models
+// ============================================
+
+model Component {
+  id          String   @id @default(cuid())
+  type        String   // atom, molecule, organism
+  name        String   // e.g., "button", "card", "header"
+  slug        String   @unique
+  description String?
+  category    String?  // visual, form, content, layout, navigation, etc.
+  metadata    Json     @default("{}") // props schema, default values, etc.
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  versions    ComponentVersion[]
+  usedInComponents ComponentComposition[] @relation("parentComponent")
+  usesComponents ComponentComposition[] @relation("childComponent")
+
+  @@index([type])
+  @@index([category])
+  @@unique([slug, type])
+}
+
+model ComponentVersion {
+  id          String   @id @default(cuid())
+  version     String   // semver: 1.0.0
+  htmlContent String?  // HTML template
+  cssContent  String?  // CSS/Tailwind styles
+  jsContent   String?  // JavaScript logic
+  status      String   @default("draft") // draft, published
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  componentId String
+  component   Component @relation(fields: [componentId], references: [id], onDelete: Cascade)
+
+  @@unique([componentId, version])
+  @@index([componentId])
+  @@index([status])
+}
+
+model ComponentComposition {
+  id        String   @id @default(cuid())
+  order     Int      // Order in parent component
+  createdAt DateTime @default(now())
+
+  parentComponentId String
+  parentComponent   Component @relation("parentComponent", fields: [parentComponentId], references: [id], onDelete: Cascade)
+
+  childComponentId String
+  childComponent   Component @relation("childComponent", fields: [childComponentId], references: [id], onDelete: Cascade)
+
+  @@unique([parentComponentId, childComponentId])
+  @@index([parentComponentId])
+}
+
+model CustomComponent {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String
+  description String?
+  metadata    Json     @default("{}") // composition of core components
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+}
+
+// ============================================
+// Page & Template Models
+// ============================================
+
+model Page {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String
+  description String?
+  status      String   @default("draft") // draft, published
+  content     Json     @default("{}") // JSON structure of components and content
+  metadata    Json     @default("{}") // SEO, og tags, etc.
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  publishedAt DateTime?
+
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  templateId  String?
+  template    PageTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@index([status])
+}
+
+model PageTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String
+  description String?
+  content     Json     @default("{}") // Template structure (without tenant content)
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  pages       Page[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+}
+
+// ============================================
+// Content Model
+// ============================================
+
+model Content {
+  id        String   @id @default(cuid())
+  pageId    String
+  componentPath String // e.g., "sections.0.components.1"
+  componentType String // e.g., "button", "card", etc.
+  data      Json     @default("{}") // Component-specific content
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([pageId, componentPath])
+  @@index([tenantId])
+  @@index([pageId])
+}
+
+// ============================================
+// Analytics Models
+// ============================================
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  eventType String   // pageview, click, form_submit, etc.
+  data      Json     @default("{}") // Event-specific data
+  createdAt DateTime @default(now())
+
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([eventType])
+  @@index([createdAt])
+}
+
+model TenantAnalytics {
+  id          String   @id @default(cuid())
+  date        DateTime
+  pageViews   Int      @default(0)
+  uniqueUsers Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenantId    String
+}

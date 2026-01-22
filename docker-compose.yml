@@ -1,0 +1,119 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: autodealercloud-db
+    environment:
+      POSTGRES_USER: autodealercloud
+      POSTGRES_PASSWORD: development
+      POSTGRES_DB: autodealercloud
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - autodealercloud
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: autodealercloud-cache
+    ports:
+      - "6379:6379"
+    networks:
+      - autodealercloud
+
+  # API Server
+  api:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.api
+    container_name: autodealercloud-api
+    ports:
+      - "3004:3004"
+    environment:
+      DATABASE_URL: postgresql://autodealercloud:development@postgres:5432/autodealercloud
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: development
+      JWT_SECRET: development-secret-key
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./apps/api:/app/apps/api
+    networks:
+      - autodealercloud
+
+  # Marketing Site
+  marketing-site:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.marketing
+    container_name: autodealercloud-marketing
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./apps/marketing-site:/app/apps/marketing-site
+    networks:
+      - autodealercloud
+
+  # Admin Panel
+  admin-panel:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.admin
+    container_name: autodealercloud-admin
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:3004
+    volumes:
+      - ./apps/admin-panel:/app/apps/admin-panel
+    networks:
+      - autodealercloud
+
+  # Tenant CMS
+  tenant-cms:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.tenant
+    container_name: autodealercloud-tenant
+    ports:
+      - "3002:3002"
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:3004
+    volumes:
+      - ./apps/tenant-cms:/app/apps/tenant-cms
+    networks:
+      - autodealercloud
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: autodealercloud-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./infrastructure/nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - marketing-site
+      - admin-panel
+      - tenant-cms
+      - api
+    networks:
+      - autodealercloud
+
+volumes:
+  postgres_data:
+
+networks:
+  autodealercloud:
+    driver: bridge

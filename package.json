@@ -1,0 +1,33 @@
+{
+  "name": "autodealercloud",
+  "version": "1.0.0",
+  "description": "AutoDealerCloud - Multi-tenant SaaS platform for auto dealers",
+  "private": true,
+  "packageManager": "npm@11.6.2",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "test": "turbo run test",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "db:generate": "cd packages/database && npx prisma generate",
+    "db:migrate": "cd packages/database && npx prisma migrate dev",
+    "db:push": "cd packages/database && npx prisma db push",
+    "db:seed": "cd packages/database && npx tsx prisma/seed.ts"
+  },
+  "devDependencies": {
+    "turbo": "latest",
+    "typescript": "^5.3.3",
+    "eslint": "^9.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

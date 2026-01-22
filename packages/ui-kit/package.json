@@ -1,0 +1,17 @@
+{
+  "name": "@autodealercloud/ui-kit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shared React UI components",
+  "main": "index.ts",
+  "types": "index.ts",
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/react": "^18.2.42",
+    "@types/react-dom": "^18.2.17"
+  }
+}

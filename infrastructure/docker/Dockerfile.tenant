@@ -1,0 +1,14 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY apps/tenant-cms ./apps/tenant-cms
+COPY packages ./packages
+COPY turbo.json tsconfig.json ./
+
+EXPOSE 3002
+
+CMD ["npm", "run", "dev:tenant"]
