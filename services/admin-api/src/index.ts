@@ -1,6 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { initializeDatabase, closeDatabase } from './database/connection';
+import authRoutes from './routes/auth';
+import tenantRoutes from './routes/tenants';
 
 dotenv.config();
 
@@ -15,15 +18,34 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'admin-api' });
 });
 
-// Tenants routes (placeholder)
-app.get('/api/tenants', (req, res) => {
-  res.json({ message: 'Get all tenants' });
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/tenants', tenantRoutes);
+
+// Error handling
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error(err);
+  res.status(500).json({ error: 'Internal server error' });
 });
 
-app.post('/api/tenants', (req, res) => {
-  res.json({ message: 'Create tenant' });
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  await closeDatabase();
+  process.exit(0);
 });
 
-app.listen(PORT, () => {
-  console.log(`Admin API listening on port ${PORT}`);
-});
+// Start server
+async function start() {
+  try {
+    await initializeDatabase();
+    app.listen(PORT, () => {
+      console.log(`✅ Admin API listening on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error('❌ Failed to start Admin API:', err);
+    process.exit(1);
+  }
+}
+
+start();
