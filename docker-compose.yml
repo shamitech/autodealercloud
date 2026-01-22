@@ -1,94 +1,178 @@
 version: '3.8'
 
 services:
-  postgres-core:
-    image: postgres:16
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: autodealercloud
-    ports:
-      - "5435:5432"
-    volumes:
-      - postgres-core-data:/var/lib/postgresql/data
-
-  postgres-account:
-    image: postgres:16
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: autodealercloud_account
-    ports:
-      - "5433:5432"
-    volumes:
-      - postgres-account-data:/var/lib/postgresql/data
-
+  # ============================================
+  # PostgreSQL Databases
+  # ============================================
   postgres-admin:
-    image: postgres:16
+    image: postgres:15-alpine
+    container_name: autodealercloud-postgres-admin
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: autodealercloud_admin
+      POSTGRES_DB: admin_db
+      POSTGRES_USER: admin_user
+      POSTGRES_PASSWORD: admin_password
     ports:
       - "5434:5432"
     volumes:
-      - postgres-admin-data:/var/lib/postgresql/data
+      - postgres_admin_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin_user -d admin_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  core-cms:
+  postgres-cms:
+    image: postgres:15-alpine
+    container_name: autodealercloud-postgres-cms
+    environment:
+      POSTGRES_DB: cms_db
+      POSTGRES_USER: cms_user
+      POSTGRES_PASSWORD: cms_password
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_cms_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cms_user -d cms_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-publisher:
+    image: postgres:15-alpine
+    container_name: autodealercloud-postgres-publisher
+    environment:
+      POSTGRES_DB: publisher_db
+      POSTGRES_USER: publisher_user
+      POSTGRES_PASSWORD: publisher_password
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres_publisher_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U publisher_user -d publisher_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # Backend Services
+  # ============================================
+  admin-api:
     build:
       context: .
-      dockerfile: services/core-cms/Dockerfile
-    ports:
-      - "3001:3001"
+      dockerfile: ./services/admin-api/Dockerfile
+    container_name: autodealercloud-admin-api
     environment:
-      PORT: 3001
-      DATABASE_URL: postgresql://user:password@postgres-core:5432/autodealercloud
-      NODE_ENV: development
+      NODE_ENV: production
+      PORT: 3010
+      DATABASE_URL: postgres://admin_user:admin_password@postgres-admin:5432/admin_db
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+    ports:
+      - "3010:3010"
     depends_on:
-      - postgres-core
+      postgres-admin:
+        condition: service_healthy
+    volumes:
+      - ./services/admin-api:/app
+      - /app/node_modules
 
-  account-portal:
+  cms-api:
     build:
       context: .
-      dockerfile: services/account-portal/Dockerfile
-    ports:
-      - "3002:3002"
+      dockerfile: ./services/cms-api/Dockerfile
+    container_name: autodealercloud-cms-api
     environment:
-      PORT: 3002
-      DATABASE_URL: postgresql://user:password@postgres-account:5432/autodealercloud_account
-      NODE_ENV: development
-      JWT_SECRET: dev-secret-key
+      NODE_ENV: production
+      PORT: 3020
+      DATABASE_URL: postgres://cms_user:cms_password@postgres-cms:5432/cms_db
+      ADMIN_DB_URL: postgres://admin_user:admin_password@postgres-admin:5432/admin_db
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+    ports:
+      - "3020:3020"
     depends_on:
-      - postgres-account
+      postgres-cms:
+        condition: service_healthy
+      postgres-admin:
+        condition: service_healthy
+    volumes:
+      - ./services/cms-api:/app
+      - /app/node_modules
 
-  admin-portal:
+  publisher-api:
     build:
       context: .
-      dockerfile: services/admin-portal/Dockerfile
-    ports:
-      - "3003:3003"
+      dockerfile: ./services/publisher-api/Dockerfile
+    container_name: autodealercloud-publisher-api
     environment:
-      PORT: 3003
-      DATABASE_URL: postgresql://user:password@postgres-admin:5432/autodealercloud_admin
-      NODE_ENV: development
-      JWT_SECRET: dev-admin-secret-key
-      ADMIN_API_KEY: dev-api-key
+      NODE_ENV: production
+      PORT: 3030
+      DATABASE_URL: postgres://publisher_user:publisher_password@postgres-publisher:5432/publisher_db
+      CMS_API_URL: http://cms-api:3020
+    ports:
+      - "3030:3030"
     depends_on:
-      - postgres-admin
+      postgres-publisher:
+        condition: service_healthy
+    volumes:
+      - ./services/publisher-api:/app
+      - /app/node_modules
 
-  # domain-router is handled by Nginx proxy instead
-  # domain-router:
-  #   build:
-  #     context: .
-  #     dockerfile: services/domain-router/Dockerfile
-  #   ports:
-  #     - "80:80"
-  #   depends_on:
-  #     - core-cms
-  #     - account-portal
-  #     - admin-portal
+  # ============================================
+  # Frontend Services
+  # ============================================
+  admin-dashboard:
+    build:
+      context: .
+      dockerfile: ./services/admin-dashboard/Dockerfile
+    container_name: autodealercloud-admin-dashboard
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3010
+      NEXT_PUBLIC_API_URL_INTERNAL: http://admin-api:3010
+    ports:
+      - "3011:3000"
+    depends_on:
+      - admin-api
+    volumes:
+      - ./services/admin-dashboard:/app
+      - /app/node_modules
+      - /app/.next
+
+  cms-dashboard:
+    build:
+      context: .
+      dockerfile: ./services/cms-dashboard/Dockerfile
+    container_name: autodealercloud-cms-dashboard
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3020
+      NEXT_PUBLIC_API_URL_INTERNAL: http://cms-api:3020
+    ports:
+      - "3021:3000"
+    depends_on:
+      - cms-api
+    volumes:
+      - ./services/cms-dashboard:/app
+      - /app/node_modules
+      - /app/.next
+
+  publisher:
+    build:
+      context: .
+      dockerfile: ./services/publisher/Dockerfile
+    container_name: autodealercloud-publisher
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3030
+      NEXT_PUBLIC_API_URL_INTERNAL: http://publisher-api:3030
+    ports:
+      - "3031:3000"
+    depends_on:
+      - publisher-api
+    volumes:
+      - ./services/publisher:/app
+      - /app/node_modules
+      - /app/.next
 
 volumes:
-  postgres-core-data:
-  postgres-account-data:
-  postgres-admin-data:
+  postgres_admin_data:
+  postgres_cms_data:
+  postgres_publisher_data:

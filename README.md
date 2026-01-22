@@ -1,47 +1,73 @@
-# AutoDealerCloud
+# AutoDealerCloud - Multi-Tenant SaaS CMS
 
-Cloud-based CMS specifically for Auto Dealerships
+A comprehensive SaaS platform for auto dealerships to manage their digital presence through a visual page builder.
 
 ## Architecture
 
-This is a monorepo containing 4 separate services:
-
-- **core-cms** - Main CMS engine (shared across all tenants)
-- **account-portal** - Tenant self-service portal
-- **admin-portal** - Admin dashboard for managing all tenants
-- **domain-router** - Middleware for routing custom domains
-
-## Project Structure
-
 ```
-autodealercloud/
-├── services/
-│   ├── core-cms/
-│   ├── account-portal/
-│   ├── admin-portal/
-│   └── domain-router/
-├── docker-compose.yml
-├── package.json
-└── tsconfig.json
+Three Services:
+├── Admin Dashboard (admin.autodealercloud.com) - Manage tenants
+├── CMS Dashboard (tenant.autodealercloud.com) - Build pages  
+└── Publisher (tenant-pub.autodealercloud.com) - Public website
+
+Three Databases:
+├── Admin DB - Platform management
+├── CMS DB - Tenant content
+└── Publisher DB - Published pages
 ```
 
-## Getting Started
+## Quick Start
 
-1. Install dependencies: `npm install`
-2. Set up environment variables in each service
-3. Run development mode: `npm run dev`
-4. Build: `npm run build`
+### Prerequisites
+- Docker & Docker Compose
+- Node.js 18+ (for local development)
 
-## Database
+### Development
 
-Each tenant has a separate PostgreSQL database.
+```bash
+# Copy environment file
+cp .env.example .env
 
-## Multi-Tenancy Structure
+# Start all services with Docker Compose
+docker-compose up -d
 
-- **Company ID**: c10000
-- **Environment ID**: e10234
-- **Domains**:
-  - Auth (Authoring): `c10000-e10234-auth.autodealercloud.com`
-  - Stage (Preview): `c10000-e10234-stage.autodealercloud.com`
-  - Pub (Published): `c10000-e10234-pub.autodealercloud.com`
-  - Custom Domain: `www.mydealership.com` (points to pub)
+# Wait for services to start, then:
+# - Admin Dashboard: http://localhost:3011
+# - CMS Dashboard: http://localhost:3021
+# - Publisher: http://localhost:3031
+
+# Admin API: http://localhost:3010
+# CMS API: http://localhost:3020
+# Publisher API: http://localhost:3030
+```
+
+## Services
+
+### Admin API (Port 3010)
+- Tenant management
+- User provisioning
+- Platform configuration
+
+### CMS API (Port 3020)
+- Component/module management
+- Page building
+- Tenant content management
+
+### Publisher API (Port 3030)
+- Publish page snapshots
+- Serve published pages
+
+## Database Schema
+
+See `/database` folder for migrations and schema documentation.
+
+## Deployment
+
+Deployed on VPS at `/var/www/autodealercloud`
+
+```bash
+cd /var/www/autodealercloud
+git pull origin master
+docker-compose build
+docker-compose up -d
+```
