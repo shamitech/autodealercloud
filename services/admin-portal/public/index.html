@@ -347,32 +347,8 @@
     </style>
 </head>
 <body>
-    <!-- Login Screen -->
-    <div class="login-screen" id="loginScreen">
-        <div class="login-card">
-            <h1>Admin Portal</h1>
-            <p>Tenant Management System</p>
-            
-            <div class="login-error" id="loginError"></div>
-            
-            <form id="loginForm">
-                <div class="login-form-group">
-                    <label for="username">Email</label>
-                    <input type="email" id="username" name="username" required autocomplete="email" placeholder="Enter your email address">
-                </div>
-                
-                <div class="login-form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Enter your password">
-                </div>
-                
-                <button type="submit" class="login-button" id="loginButton">Login</button>
-            </form>
-        </div>
-    </div>
-    
     <!-- Main Interface -->
-    <div class="hidden" id="mainInterface">
+    <div id="mainInterface">
         <div class="header">
             <div class="header-title">
                 <h1>Admin Portal</h1>
@@ -452,93 +428,15 @@
     <script>
         const API_BASE = window.location.origin;
         
-        // Check if user is logged in on page load
+        // Show dashboard directly on page load (no login required)
         window.addEventListener('load', () => {
-            const isLoggedIn = sessionStorage.getItem('adminLoggedIn');
-            if (isLoggedIn === 'true') {
-                showMainInterface();
-                loadTenants();
-            } else {
-                showLoginScreen();
-            }
+            loadTenants();
         });
         
-        // Login form submission
-        document.getElementById('loginForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            handleLogin();
+        // Logout button (removed - users can just refresh)
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            location.reload();
         });
-        
-        // Logout button
-        document.getElementById('logoutBtn').addEventListener('click', handleLogout);
-        
-        async function handleLogin() {
-            const email = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const errorDiv = document.getElementById('loginError');
-            const loginButton = document.getElementById('loginButton');
-            
-            if (!email || !password) {
-                errorDiv.textContent = '✗ Email and password are required';
-                errorDiv.style.display = 'block';
-                return;
-            }
-            
-            loginButton.disabled = true;
-            loginButton.textContent = 'Logging in...';
-            
-            try {
-                const response = await fetch(`${API_BASE}/auth/login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        email: email,
-                        password: password
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (response.ok && result.token) {
-                    // Store token and login state
-                    sessionStorage.setItem('adminToken', result.token);
-                    sessionStorage.setItem('adminLoggedIn', 'true');
-                    errorDiv.style.display = 'none';
-                    showMainInterface();
-                    loadTenants();
-                } else {
-                    errorDiv.textContent = '✗ ' + (result.error || 'Invalid credentials');
-                    errorDiv.style.display = 'block';
-                    document.getElementById('password').value = '';
-                }
-            } catch (error) {
-                errorDiv.textContent = '✗ Login failed: ' + error.message;
-                errorDiv.style.display = 'block';
-                document.getElementById('password').value = '';
-            } finally {
-                loginButton.disabled = false;
-                loginButton.textContent = 'Login';
-            }
-        }
-        
-        function handleLogout() {
-            sessionStorage.removeItem('adminLoggedIn');
-            sessionStorage.removeItem('adminToken');
-            document.getElementById('loginForm').reset();
-            showLoginScreen();
-        }
-        
-        function showLoginScreen() {
-            document.getElementById('loginScreen').classList.remove('hidden');
-            document.getElementById('mainInterface').classList.add('hidden');
-        }
-        
-        function showMainInterface() {
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('mainInterface').classList.remove('hidden');
-        }
         
         // Form submission
         document.getElementById('createTenantForm').addEventListener('submit', async (e) => {
@@ -565,12 +463,10 @@
             message.className = 'message';
             
             try {
-                const token = sessionStorage.getItem('adminToken');
                 const response = await fetch(`${API_BASE}/api/tenants`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(data)
                 });
@@ -603,12 +499,10 @@
             message.className = 'message';
             
             try {
-                const token = sessionStorage.getItem('adminToken');
                 const response = await fetch(`${API_BASE}/api/tenants`, {
                     method: 'GET',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
+                        'Content-Type': 'application/json'
                     }
                 });
                 
