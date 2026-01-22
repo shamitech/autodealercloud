@@ -2,6 +2,7 @@ import { query } from '../database/connection';
 import { Tenant, CreateTenantRequest, UpdateTenantRequest } from '../../../shared/types';
 import { generateTempPassword, generateId } from '../utils/crypto';
 import { createTenantDatabase, dropTenantDatabase } from '../database/tenant-provisioning';
+import { generateTenantNginxConfig, removeTenantNginxConfig, reloadNginx } from './NginxService';
 
 export async function getAllTenants(): Promise<Tenant[]> {
   const result = await query(
@@ -62,6 +63,15 @@ export async function createTenant(tenantData: CreateTenantRequest): Promise<{ t
     // Rollback tenant creation if database provisioning fails
     await query('DELETE FROM tenants WHERE id = $1', [id]);
     throw new Error(`Failed to provision tenant database: ${error}`);
+  }
+
+  // Generate Nginx configuration for tenant
+  try {
+    await generateTenantNginxConfig(tenantData.slug, process.env.DOMAIN || 'autodealercloud.com');
+    await reloadNginx();
+  } catch (error) {
+    console.error(`Failed to generate nginx config: ${error}`);
+    // Don't throw - nginx config generation is non-critical
   }
 
   return {
@@ -128,6 +138,15 @@ export async function deleteTenant(id: string): Promise<boolean> {
   } catch (error) {
     console.error(`Failed to drop schema for ${tenant.slug}:`, error);
     // Continue with soft delete even if schema drop fails
+  }
+
+  // Remove Nginx configuration
+  try {
+    await removeTenantNginxConfig(tenant.slug);
+    await reloadNginx();
+  } catch (error) {
+    console.error(`Failed to remove nginx config: ${error}`);
+    // Continue anyway
   }
 
   const result = await query('UPDATE tenants SET status = $1, updated_at = NOW() WHERE id = $2', [
