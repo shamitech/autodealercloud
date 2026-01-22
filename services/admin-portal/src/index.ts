@@ -2,6 +2,7 @@ import express, { Express, Request, Response } from 'express';
 import path from 'path';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import bcryptjs from 'bcryptjs';
 import { Database } from './database/db';
 import { AdminAuthRoutes } from './routes/admin-auth-routes';
 import { TenantManagementRoutes } from './routes/tenant-management-routes';
@@ -42,7 +43,39 @@ app.use('/auth', authRoutes.getRouter());
 const tenantRoutes = new TenantManagementRoutes(db);
 app.use('/api/tenants', tenantRoutes.getRouter());
 
-app.listen(PORT, () => {
+// Initialize default admin user on startup
+async function initializeAdminUser() {
+  try {
+    const connection = await db.getConnection();
+    
+    // Check if admin user already exists
+    const result = await connection.query(
+      'SELECT id FROM admin_users WHERE email = $1',
+      ['jaredshami@autodealercloud.com']
+    );
+
+    if (result.rows.length === 0) {
+      // Create password hash
+      const password = 'Children$6';
+      const hashedPassword = await bcryptjs.hash(password, 10);
+
+      // Insert admin user
+      await connection.query(
+        'INSERT INTO admin_users (email, password_hash, first_name, last_name, role, status) VALUES ($1, $2, $3, $4, $5, $6)',
+        ['jaredshami@autodealercloud.com', hashedPassword, 'Jared', 'Shami', 'super_admin', 'active']
+      );
+
+      console.log('✓ Default admin user created');
+    }
+
+    connection.release();
+  } catch (error) {
+    console.error('Warning: Could not initialize admin user:', error);
+  }
+}
+
+app.listen(PORT, async () => {
   console.log(`Admin Portal is running on port ${PORT}`);
+  await initializeAdminUser();
 });
 
