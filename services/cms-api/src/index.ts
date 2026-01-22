@@ -1,6 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { initializeDatabase, closeDatabase } from './database/connection';
+import authRoutes from './routes/auth';
+import componentRoutes from './routes/components';
+import pageRoutes from './routes/pages';
 
 dotenv.config();
 
@@ -15,20 +19,35 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'cms-api' });
 });
 
-// Components routes (placeholder)
-app.get('/api/components', (req, res) => {
-  res.json({ message: 'Get all components' });
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/components', componentRoutes);
+app.use('/api/pages', pageRoutes);
+
+// Error handling
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error(err);
+  res.status(500).json({ error: 'Internal server error' });
 });
 
-app.post('/api/components', (req, res) => {
-  res.json({ message: 'Create component' });
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  await closeDatabase();
+  process.exit(0);
 });
 
-// Pages routes (placeholder)
-app.get('/api/pages', (req, res) => {
-  res.json({ message: 'Get all pages' });
-});
+// Start server
+async function start() {
+  try {
+    await initializeDatabase();
+    app.listen(PORT, () => {
+      console.log(`✅ CMS API listening on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error('❌ Failed to start CMS API:', err);
+    process.exit(1);
+  }
+}
 
-app.listen(PORT, () => {
-  console.log(`CMS API listening on port ${PORT}`);
-});
+start();
