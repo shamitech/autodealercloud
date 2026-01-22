@@ -1,0 +1,68 @@
+{
+  "apps": [
+    {
+      "name": "marketing-site",
+      "cwd": "/var/www/autodealercloud",
+      "script": "npm",
+      "args": "run dev --workspace=@autodealercloud/marketing-site",
+      "instances": 1,
+      "autorestart": true,
+      "watch": false,
+      "max_memory_restart": "500M",
+      "env": {
+        "NODE_ENV": "production",
+        "PORT": "3000"
+      },
+      "error_file": "/var/log/autodealercloud/marketing-site-error.log",
+      "out_file": "/var/log/autodealercloud/marketing-site-out.log"
+    },
+    {
+      "name": "admin-panel",
+      "cwd": "/var/www/autodealercloud",
+      "script": "npm",
+      "args": "run dev --workspace=@autodealercloud/admin-panel",
+      "instances": 1,
+      "autorestart": true,
+      "watch": false,
+      "max_memory_restart": "500M",
+      "env": {
+        "NODE_ENV": "production",
+        "PORT": "3001"
+      },
+      "error_file": "/var/log/autodealercloud/admin-panel-error.log",
+      "out_file": "/var/log/autodealercloud/admin-panel-out.log"
+    },
+    {
+      "name": "tenant-cms",
+      "cwd": "/var/www/autodealercloud",
+      "script": "npm",
+      "args": "run dev --workspace=@autodealercloud/tenant-cms",
+      "instances": 1,
+      "autorestart": true,
+      "watch": false,
+      "max_memory_restart": "500M",
+      "env": {
+        "NODE_ENV": "production",
+        "PORT": "3002"
+      },
+      "error_file": "/var/log/autodealercloud/tenant-cms-error.log",
+      "out_file": "/var/log/autodealercloud/tenant-cms-out.log"
+    },
+    {
+      "name": "api",
+      "cwd": "/var/www/autodealercloud",
+      "script": "npm",
+      "args": "run dev --workspace=@autodealercloud/api",
+      "instances": 2,
+      "autorestart": true,
+      "watch": false,
+      "max_memory_restart": "300M",
+      "env": {
+        "NODE_ENV": "production",
+        "PORT": "3004"
+      },
+      "error_file": "/var/log/autodealercloud/api-error.log",
+      "out_file": "/var/log/autodealercloud/api-out.log"
+    }
+  ]
+}
