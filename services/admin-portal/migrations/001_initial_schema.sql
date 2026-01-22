@@ -81,3 +81,9 @@ CREATE INDEX idx_admin_audit_logs_admin_user ON admin_audit_logs(admin_user_id);
 CREATE INDEX idx_admin_audit_logs_created ON admin_audit_logs(created_at);
 CREATE INDEX idx_metrics_name ON system_metrics(metric_name);
 CREATE INDEX idx_metrics_recorded ON system_metrics(recorded_at);
+
+-- Seed default admin user (password: Children$6)
+-- Hash generated with bcrypt: $2a$10$JwVPVZZmR/TpVZGQxK1Kxe0b1nzVQvZQnZeUz0K0m1nZgQqJhQqam
+INSERT INTO admin_users (email, password_hash, first_name, last_name, role, status)
+VALUES ('jaredshami@autodealercloud.com', '$2a$10$JwVPVZZmR/TpVZGQxK1Kxe0b1nzVQvZQnZeUz0K0m1nZgQqJhQqam', 'Jared', 'Shami', 'super_admin', 'active')
+ON CONFLICT (email) DO NOTHING;

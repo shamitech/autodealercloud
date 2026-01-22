@@ -357,8 +357,8 @@
             
             <form id="loginForm">
                 <div class="login-form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required autocomplete="username" placeholder="Enter your username">
+                    <label for="username">Email</label>
+                    <input type="email" id="username" name="username" required autocomplete="email" placeholder="Enter your email">
                 </div>
                 
                 <div class="login-form-group">
@@ -451,8 +451,6 @@
     
     <script>
         const API_BASE = window.location.origin;
-        const VALID_USERNAME = 'jaredshami';
-        const VALID_PASSWORD = 'Children$6';
         
         // Check if user is logged in on page load
         window.addEventListener('load', () => {
