@@ -46,10 +46,8 @@ app.use('/api/tenants', tenantRoutes.getRouter());
 // Initialize default admin user on startup
 async function initializeAdminUser() {
   try {
-    const connection = await db.getConnection();
-    
     // Check if admin user already exists
-    const result = await connection.query(
+    const result = await db.query(
       'SELECT id FROM admin_users WHERE email = $1',
       ['jaredshami@autodealercloud.com']
     );
@@ -60,15 +58,13 @@ async function initializeAdminUser() {
       const hashedPassword = await bcryptjs.hash(password, 10);
 
       // Insert admin user
-      await connection.query(
+      await db.query(
         'INSERT INTO admin_users (email, password_hash, first_name, last_name, role, status) VALUES ($1, $2, $3, $4, $5, $6)',
         ['jaredshami@autodealercloud.com', hashedPassword, 'Jared', 'Shami', 'super_admin', 'active']
       );
 
       console.log('✓ Default admin user created');
     }
-
-    connection.release();
   } catch (error) {
     console.error('Warning: Could not initialize admin user:', error);
   }
