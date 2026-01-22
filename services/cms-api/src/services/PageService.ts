@@ -1,5 +1,6 @@
 import { query } from '../database/connection';
 import { generateId } from '../utils/crypto';
+import { publishPageToPublisher, unpublishPageFromPublisher } from './PublishingService';
 
 export async function getAllPages(tenantId: string, status?: string) {
   let sql = 'SELECT id, title, slug, status, published_at, created_at FROM pages WHERE tenant_id = $1';
@@ -95,14 +96,36 @@ export async function deletePage(tenantId: string, pageId: string) {
 }
 
 export async function publishPage(tenantId: string, pageId: string) {
+  // Get page data first
+  const pageData = await getPageById(tenantId, pageId);
+  if (!pageData) {
+    throw new Error('Page not found');
+  }
+
   const result = await query(
     `UPDATE pages SET status = 'published', published_at = NOW(), updated_at = NOW()
      WHERE id = $1 AND tenant_id = $2
-     RETURNING id, slug, status, published_at`,
+     RETURNING id, title, slug, description, content, status, published_at`,
     [pageId, tenantId]
   );
 
-  return result.rows[0] || null;
+  const publishedPage = result.rows[0];
+  if (publishedPage) {
+    // Publish to publisher database
+    try {
+      await publishPageToPublisher(pageId, tenantId, publishedPage);
+    } catch (error) {
+      console.error('Failed to publish to publisher database:', error);
+      // Revert the publish status if publishing fails
+      await query(
+        `UPDATE pages SET status = 'draft', updated_at = NOW() WHERE id = $1 AND tenant_id = $2`,
+        [pageId, tenantId]
+      );
+      throw error;
+    }
+  }
+
+  return publishedPage;
 }
 
 export async function unpublishPage(tenantId: string, pageId: string) {
@@ -112,5 +135,16 @@ export async function unpublishPage(tenantId: string, pageId: string) {
     [pageId, tenantId]
   );
 
-  return result.rows[0] || null;
+  const unpublishedPage = result.rows[0];
+  if (unpublishedPage) {
+    // Remove from publisher database
+    try {
+      await unpublishPageFromPublisher(pageId);
+    } catch (error) {
+      console.error('Failed to unpublish from publisher:', error);
+      // Continue anyway, publisher DB will handle cleanup
+    }
+  }
+
+  return unpublishedPage;
 }

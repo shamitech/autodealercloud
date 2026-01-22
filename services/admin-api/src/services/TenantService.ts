@@ -1,6 +1,7 @@
 import { query } from '../database/connection';
 import { Tenant, CreateTenantRequest, UpdateTenantRequest } from '../../../shared/types';
 import { generateTempPassword, generateId } from '../utils/crypto';
+import { createTenantDatabase, dropTenantDatabase } from '../database/tenant-provisioning';
 
 export async function getAllTenants(): Promise<Tenant[]> {
   const result = await query(
@@ -53,6 +54,15 @@ export async function createTenant(tenantData: CreateTenantRequest): Promise<{ t
       tempPasswordExpiresAt,
     ]
   );
+
+  // Provision CMS database schema for new tenant
+  try {
+    await createTenantDatabase(id, tenantData.slug);
+  } catch (error) {
+    // Rollback tenant creation if database provisioning fails
+    await query('DELETE FROM tenants WHERE id = $1', [id]);
+    throw new Error(`Failed to provision tenant database: ${error}`);
+  }
 
   return {
     tenant: result.rows[0],
@@ -107,6 +117,19 @@ export async function updateTenant(id: string, tenantData: UpdateTenantRequest):
 }
 
 export async function deleteTenant(id: string): Promise<boolean> {
+  const tenant = await getTenantById(id);
+  if (!tenant) {
+    throw new Error('Tenant not found');
+  }
+
+  // Drop tenant database schema first
+  try {
+    await dropTenantDatabase(tenant.slug);
+  } catch (error) {
+    console.error(`Failed to drop schema for ${tenant.slug}:`, error);
+    // Continue with soft delete even if schema drop fails
+  }
+
   const result = await query('UPDATE tenants SET status = $1, updated_at = NOW() WHERE id = $2', [
     'deleted',
     id,

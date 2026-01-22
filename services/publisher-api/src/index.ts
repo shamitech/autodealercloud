@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { initializeDatabase, closeDatabase } from './database/connection';
 import pageRoutes from './routes/pages';
+import internalRoutes from './routes/internal';
 
 dotenv.config();
 
@@ -19,6 +20,9 @@ app.get('/health', (req, res) => {
 
 // Routes - public pages
 app.use('/api/pages', pageRoutes);
+
+// Internal routes (from CMS API)
+app.use('/api', internalRoutes);
 
 // Error handling
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
