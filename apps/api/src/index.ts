@@ -1,6 +1,6 @@
 import Fastify from 'fastify'
-import jwt from '@fastify/jwt'
 import { PrismaClient } from '@autodealercloud/database'
+import { sign, verify } from 'jsonwebtoken'
 import { AuthService } from './auth'
 
 const app = Fastify({
@@ -9,11 +9,6 @@ const app = Fastify({
 
 const prisma = new PrismaClient()
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key-change-in-production'
-
-// Register JWT plugin
-await app.register(jwt, {
-  secret: JWT_SECRET,
-})
 
 // Manually register JSON content-type parser
 app.addContentTypeParser('application/json', { parseAs: 'string' }, async (req, body) => {
@@ -34,7 +29,19 @@ app.addHook('onSend', async (request, reply) => {
 // Middleware to verify JWT token
 async function authenticate(request: any, reply: any) {
   try {
-    await request.jwtVerify()
+    const token = request.headers.authorization?.split(' ')[1]
+
+    if (!token) {
+      reply.status(401).send({ error: 'No token provided' })
+      return
+    }
+
+    try {
+      const decoded = verify(token, JWT_SECRET) as any
+      request.user = decoded
+    } catch (err) {
+      reply.status(401).send({ error: 'Invalid token' })
+    }
   } catch (err) {
     reply.status(401).send({ error: 'Unauthorized' })
   }
@@ -59,7 +66,7 @@ app.post('/api/v1/auth/register', async (request: any, reply: any) => {
     }
 
     const user = await AuthService.register(email, password, name, tenantId)
-    const token = app.jwt.sign({ sub: user.id, email: user.email })
+    const token = sign({ sub: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' })
 
     return { success: true, data: { user, token } }
   } catch (error: any) {
@@ -79,7 +86,7 @@ app.post('/api/v1/auth/login', async (request: any, reply: any) => {
     }
 
     const user = await AuthService.login(email, password)
-    const token = app.jwt.sign({ sub: user.id, email: user.email })
+    const token = sign({ sub: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' })
 
     return { success: true, data: { user, token } }
   } catch (error: any) {
@@ -110,7 +117,7 @@ app.post('/api/v1/auth/verify', async (request: any, reply: any) => {
     }
 
     try {
-      const decoded = app.jwt.verify(token)
+      const decoded = verify(token, JWT_SECRET)
       return { success: true, data: decoded }
     } catch (err) {
       reply.status(401)
