@@ -1,6 +1,6 @@
 import Fastify from 'fastify'
 import { PrismaClient } from '@autodealercloud/database'
-import { sign, verify } from 'jsonwebtoken'
+import jwt from 'jsonwebtoken'
 import { AuthService } from './auth'
 
 const app = Fastify({
@@ -37,7 +37,7 @@ async function authenticate(request: any, reply: any) {
     }
 
     try {
-      const decoded = verify(token, JWT_SECRET) as any
+      const decoded = jwt.verify(token, JWT_SECRET) as any
       request.user = decoded
     } catch (err) {
       reply.status(401).send({ error: 'Invalid token' })
@@ -66,7 +66,7 @@ app.post('/api/v1/auth/register', async (request: any, reply: any) => {
     }
 
     const user = await AuthService.register(email, password, name, tenantId)
-    const token = sign({ sub: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' })
+    const token = jwt.sign({ sub: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' })
 
     return { success: true, data: { user, token } }
   } catch (error: any) {
@@ -86,7 +86,7 @@ app.post('/api/v1/auth/login', async (request: any, reply: any) => {
     }
 
     const user = await AuthService.login(email, password)
-    const token = sign({ sub: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' })
+    const token = jwt.sign({ sub: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' })
 
     return { success: true, data: { user, token } }
   } catch (error: any) {
@@ -117,7 +117,7 @@ app.post('/api/v1/auth/verify', async (request: any, reply: any) => {
     }
 
     try {
-      const decoded = verify(token, JWT_SECRET)
+      const decoded = jwt.verify(token, JWT_SECRET)
       return { success: true, data: decoded }
     } catch (err) {
       reply.status(401)
