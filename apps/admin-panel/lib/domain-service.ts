@@ -31,7 +31,8 @@ export interface DomainResponse {
 class DomainService {
   async getCustomDomains(): Promise<CustomDomain[]> {
     const response = await apiClient.get<DomainResponse>('/custom-domains')
-    return Array.isArray(response.data) ? response.data : [response.data]
+    const data = Array.isArray(response.data) ? response.data : [response.data]
+    return (data as CustomDomain[])
   }
 
   async createCustomDomain(tenantId: string, domain: string): Promise<CustomDomain> {
@@ -39,7 +40,8 @@ class DomainService {
       tenantId,
       domain,
     })
-    return Array.isArray(response.data) ? response.data[0] : response.data
+    const data = Array.isArray(response.data) ? response.data[0] : response.data
+    return (data as CustomDomain)
   }
 
   async deleteCustomDomain(id: string): Promise<void> {
@@ -48,7 +50,8 @@ class DomainService {
 
   async getAuthDomains(): Promise<AuthDomain[]> {
     const response = await apiClient.get<DomainResponse>('/auth-domains')
-    return Array.isArray(response.data) ? response.data : [response.data]
+    const data = Array.isArray(response.data) ? response.data : [response.data]
+    return (data as AuthDomain[])
   }
 
   async createAuthDomain(domain: string, description?: string): Promise<AuthDomain> {
@@ -56,7 +59,8 @@ class DomainService {
       domain,
       description,
     })
-    return Array.isArray(response.data) ? response.data[0] : response.data
+    const data = Array.isArray(response.data) ? response.data[0] : response.data
+    return (data as AuthDomain)
   }
 
   async deleteAuthDomain(id: string): Promise<void> {
@@ -65,7 +69,8 @@ class DomainService {
 
   async getPublishDomains(): Promise<PublishDomain[]> {
     const response = await apiClient.get<DomainResponse>('/publish-domains')
-    return Array.isArray(response.data) ? response.data : [response.data]
+    const data = Array.isArray(response.data) ? response.data : [response.data]
+    return (data as PublishDomain[])
   }
 
   async createPublishDomain(domain: string, description?: string): Promise<PublishDomain> {
@@ -73,7 +78,8 @@ class DomainService {
       domain,
       description,
     })
-    return Array.isArray(response.data) ? response.data[0] : response.data
+    const data = Array.isArray(response.data) ? response.data[0] : response.data
+    return (data as PublishDomain)
   }
 
   async deletePublishDomain(id: string): Promise<void> {

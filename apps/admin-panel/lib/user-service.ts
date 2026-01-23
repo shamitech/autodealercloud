@@ -18,22 +18,26 @@ export interface UserResponse {
 class UserService {
   async getUsers(): Promise<User[]> {
     const response = await apiClient.get<UserResponse>('/users')
-    return Array.isArray(response.data) ? response.data : [response.data]
+    const data = Array.isArray(response.data) ? response.data : [response.data]
+    return (data as User[])
   }
 
   async getUser(id: string): Promise<User> {
     const response = await apiClient.get<UserResponse>(`/users/${id}`)
-    return Array.isArray(response.data) ? response.data[0] : response.data
+    const data = Array.isArray(response.data) ? response.data[0] : response.data
+    return (data as User)
   }
 
   async createUser(data: Partial<User> & { password: string }): Promise<User> {
     const response = await apiClient.post<UserResponse>('/users', data)
-    return Array.isArray(response.data) ? response.data[0] : response.data
+    const result = Array.isArray(response.data) ? response.data[0] : response.data
+    return (result as User)
   }
 
   async updateUser(id: string, data: Partial<User>): Promise<User> {
     const response = await apiClient.put<UserResponse>(`/users/${id}`, data)
-    return Array.isArray(response.data) ? response.data[0] : response.data
+    const result = Array.isArray(response.data) ? response.data[0] : response.data
+    return (result as User)
   }
 
   async deleteUser(id: string): Promise<void> {
