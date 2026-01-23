@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "description": "Prisma ORM and database schema for AutoDealerCloud",
+  "exports": {
+    ".": {
+      "import": "./index.ts"
+    }
+  },
   "scripts": {
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
