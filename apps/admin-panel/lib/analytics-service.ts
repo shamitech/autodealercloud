@@ -24,7 +24,8 @@ export interface AnalyticsResponse {
 class AnalyticsService {
   async getTenantAnalytics(): Promise<TenantAnalytics[]> {
     const response = await apiClient.get<AnalyticsResponse>('/analytics')
-    return Array.isArray(response.data) ? response.data : [response.data]
+    const data = Array.isArray(response.data) ? response.data : [response.data]
+    return (data as TenantAnalytics[])
   }
 
   async getTenantAnalyticsById(tenantId: string): Promise<TenantAnalytics> {
