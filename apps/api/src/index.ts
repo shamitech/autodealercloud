@@ -11,7 +11,7 @@ const prisma = new PrismaClient()
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key-change-in-production'
 
 // Manually register JSON content-type parser
-app.addContentTypeParser('application/json', { parseAs: 'string' }, async (req, body) => {
+app.addContentTypeParser('application/json', { parseAs: 'string' }, async (req: any, body: string) => {
   try {
     return JSON.parse(body)
   } catch (err) {
