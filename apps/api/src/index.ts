@@ -672,9 +672,9 @@ app.get('/api/v1/tenants/:tenantId/analytics', async (request: any) => {
 
     const summary = {
       totalEvents: events.length,
-      eventTypes: [...new Set(events.map((e) => e.eventType))],
+      eventTypes: [...new Set(events.map((e: any) => e.eventType))],
       byType: events.reduce(
-        (acc, event) => {
+        (acc: any, event: any) => {
           acc[event.eventType] = (acc[event.eventType] || 0) + 1
           return acc
         },
