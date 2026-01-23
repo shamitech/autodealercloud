@@ -2,6 +2,9 @@ import Fastify from 'fastify'
 import { PrismaClient } from '@autodealercloud/database'
 import jwt from 'jsonwebtoken'
 import { AuthService } from './auth'
+import { RegisterSchema, LoginSchema, CreateTenantSchema, CreateUserSchema, CreatePageSchema, TrackEventSchema, CreateCustomDomainSchema } from '@autodealercloud/validation'
+import { validateRequest, createValidationError } from '@autodealercloud/validation/dist/middleware'
+import { ZodError } from 'zod'
 
 const app = Fastify({
   logger: true,
@@ -59,11 +62,14 @@ app.get('/health', async () => {
 // Register
 app.post('/api/v1/auth/register', async (request: any, reply: any) => {
   try {
-    const { email, password, name, tenantId } = request.body
-
-    if (!email || !password || !name) {
-      return { error: 'Email, password, and name are required' }
+    // Validate request
+    const validation = validateRequest(RegisterSchema, request.body)
+    if (!validation.success) {
+      reply.status(422)
+      return validation.error
     }
+
+    const { email, password, name, tenantId } = validation.data
 
     const user = await AuthService.register(email, password, name, tenantId)
     const token = jwt.sign({ sub: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' })
@@ -73,17 +79,20 @@ app.post('/api/v1/auth/register', async (request: any, reply: any) => {
     reply.status(400)
     return { error: error.message }
   }
+}
 })
 
 // Login
 app.post('/api/v1/auth/login', async (request: any, reply: any) => {
   try {
-    const { email, password } = request.body
-
-    if (!email || !password) {
-      reply.status(400)
-      return { error: 'Email and password required' }
+    // Validate request
+    const validation = validateRequest(LoginSchema, request.body)
+    if (!validation.success) {
+      reply.status(422)
+      return validation.error
     }
+
+    const { email, password } = validation.data
 
     const user = await AuthService.login(email, password)
     const token = jwt.sign({ sub: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' })
@@ -134,13 +143,16 @@ app.post('/api/v1/auth/verify', async (request: any, reply: any) => {
 // ============================================
 
 // Create tenant (protected)
-app.post('/api/v1/tenants', { preHandler: authenticate }, async (request: any) => {
+app.post('/api/v1/tenants', { preHandler: authenticate }, async (request: any, reply: any) => {
   try {
-    const { name, slug, description } = request.body
-
-    if (!name || !slug) {
-      return { error: 'Name and slug are required' }
+    // Validate request
+    const validation = validateRequest(CreateTenantSchema, request.body)
+    if (!validation.success) {
+      reply.status(422)
+      return validation.error
     }
+
+    const { name, slug, description, email, plan } = validation.data
 
     const tenant = await prisma.tenant.create({
       data: {
@@ -248,15 +260,18 @@ app.delete('/api/v1/tenants/:id', { preHandler: authenticate }, async (request: 
 // ============================================
 
 // Create user (protected)
-app.post('/api/v1/users', { preHandler: authenticate }, async (request: any) => {
+app.post('/api/v1/users', { preHandler: authenticate }, async (request: any, reply: any) => {
   try {
-    const { email, password, firstName, lastName, tenantId, role } = request.body
-
-    if (!email || !password) {
-      return { error: 'Email and password are required' }
+    // Validate request
+    const validation = validateRequest(CreateUserSchema, request.body)
+    if (!validation.success) {
+      reply.status(422)
+      return validation.error
     }
 
-    const user = await AuthService.register(email, password, firstName || email, tenantId)
+    const { email, password, name, tenantId, role } = validation.data
+
+    const user = await AuthService.register(email, password, name, tenantId)
     return { success: true, data: user }
   } catch (error: any) {
     return { error: error.message }

@@ -16,8 +16,10 @@
     "@prisma/client": "^5.7.0",
     "bcrypt": "^5.1.1",
     "jsonwebtoken": "^9.0.0",
+    "zod": "^3.22.4",
     "@autodealercloud/types": "*",
-    "@autodealercloud/database": "*"
+    "@autodealercloud/database": "*",
+    "@autodealercloud/validation": "*"
   },
   "devDependencies": {
     "typescript": "^5.3.3",
