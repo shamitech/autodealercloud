@@ -3,7 +3,7 @@ import { ZodSchema, ZodError } from 'zod'
 export function createValidationError(error: ZodError) {
   const fieldErrors: Record<string, string[]> = {}
   
-  error.errors.forEach(err => {
+  error.errors.forEach((err: any) => {
     const path = err.path.join('.')
     if (!fieldErrors[path]) {
       fieldErrors[path] = []

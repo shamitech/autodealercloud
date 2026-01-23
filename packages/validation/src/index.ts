@@ -85,14 +85,14 @@ export const TrackEventSchema = z.object({
 export const CreateCustomDomainSchema = z.object({
   tenantId: z.string().uuid('Invalid tenant ID'),
   domain: z.string().min(1, 'Domain is required').refine(
-    (domain) => /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/.test(domain),
+    (domain: string) => /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/.test(domain),
     'Invalid domain format'
   ),
 })
 
 export const CreateAuthDomainSchema = z.object({
   domain: z.string().min(1, 'Domain is required').refine(
-    (domain) => /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/.test(domain),
+    (domain: string) => /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/.test(domain),
     'Invalid domain format'
   ),
   description: z.string().optional(),
@@ -100,7 +100,7 @@ export const CreateAuthDomainSchema = z.object({
 
 export const CreatePublishDomainSchema = z.object({
   domain: z.string().min(1, 'Domain is required').refine(
-    (domain) => /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/.test(domain),
+    (domain: string) => /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/.test(domain),
     'Invalid domain format'
   ),
   description: z.string().optional(),
