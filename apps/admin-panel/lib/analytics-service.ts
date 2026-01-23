@@ -30,7 +30,8 @@ class AnalyticsService {
 
   async getTenantAnalyticsById(tenantId: string): Promise<TenantAnalytics> {
     const response = await apiClient.get<AnalyticsResponse>(`/analytics/${tenantId}`)
-    return Array.isArray(response.data) ? response.data[0] : response.data
+    const data = Array.isArray(response.data) ? response.data[0] : response.data
+    return (data as TenantAnalytics)
   }
 
   async getEvents(limit: number = 50): Promise<AnalyticsEvent[]> {
