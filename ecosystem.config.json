@@ -2,9 +2,9 @@
   "apps": [
     {
       "name": "marketing-site",
-      "cwd": "/var/www/autodealercloud",
+      "cwd": "/var/www/autodealercloud/apps/marketing-site",
       "script": "npm",
-      "args": "run dev --workspace=@autodealercloud/marketing-site",
+      "args": "start",
       "instances": 1,
       "autorestart": true,
       "watch": false,
@@ -18,9 +18,9 @@
     },
     {
       "name": "admin-panel",
-      "cwd": "/var/www/autodealercloud",
+      "cwd": "/var/www/autodealercloud/apps/admin-panel",
       "script": "npm",
-      "args": "run dev --workspace=@autodealercloud/admin-panel",
+      "args": "start",
       "instances": 1,
       "autorestart": true,
       "watch": false,
@@ -34,9 +34,9 @@
     },
     {
       "name": "tenant-cms",
-      "cwd": "/var/www/autodealercloud",
+      "cwd": "/var/www/autodealercloud/apps/tenant-cms",
       "script": "npm",
-      "args": "run dev --workspace=@autodealercloud/tenant-cms",
+      "args": "start",
       "instances": 1,
       "autorestart": true,
       "watch": false,
