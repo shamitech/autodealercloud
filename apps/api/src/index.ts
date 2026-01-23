@@ -69,7 +69,6 @@ app.post('/api/v1/auth/register', async (request: any, reply: any) => {
     reply.status(400)
     return { error: error.message }
   }
-}
 })
 
 // Login
