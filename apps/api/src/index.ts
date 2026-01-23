@@ -5,13 +5,18 @@ import { hash, compare } from 'bcrypt'
 
 const app = Fastify({
   logger: true,
+  bodyLimit: 1048576,
 })
 
 const prisma = new PrismaClient()
 
-await app.register(cors, {
-  origin: true,
-})
+// Register plugins
+await Promise.all([
+  app.register(cors, {
+    origin: '*',
+    credentials: true,
+  }),
+])
 
 // Fastify has built-in JSON parsing
 
