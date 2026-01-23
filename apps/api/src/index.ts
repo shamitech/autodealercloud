@@ -13,14 +13,7 @@ await app.register(cors, {
   origin: true,
 })
 
-// Register JSON body parser
-app.addContentTypeParser('application/json', async (request, payload) => {
-  let data = ''
-  for await (const chunk of payload) {
-    data += chunk
-  }
-  return JSON.parse(data)
-})
+// Fastify has built-in JSON parsing
 
 // Health check
 app.get('/health', async () => {
