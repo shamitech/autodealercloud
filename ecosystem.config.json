@@ -59,7 +59,10 @@
       "max_memory_restart": "300M",
       "env": {
         "NODE_ENV": "production",
-        "PORT": "3004"
+        "PORT": "3004",
+        "DATABASE_URL": "postgresql://autodealercloud:autodealercloud_pass_2026@localhost:5432/autodealercloud",
+        "JWT_SECRET": "your-secret-key-change-this-in-production",
+        "NEXT_PUBLIC_API_URL": "https://api.autodealercloud.com/api/v1"
       },
       "error_file": "/var/log/autodealercloud/api-error.log",
       "out_file": "/var/log/autodealercloud/api-out.log"
