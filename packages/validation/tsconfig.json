@@ -18,6 +18,5 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"],
-  "references": [{ "path": "../types" }]
+  "include": ["src"]
 }
