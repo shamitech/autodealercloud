@@ -1,6 +1,11 @@
 // Load environment variables FIRST, before any other imports
 import 'dotenv/config'
 
+// Set DATABASE_URL fallback if not already set
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = 'postgresql://autodealercloud:autodealercloud_pass_2026@localhost:5432/autodealercloud'
+}
+
 import Fastify from 'fastify'
 import { PrismaClient } from '@autodealercloud/database'
 import jwt from 'jsonwebtoken'
