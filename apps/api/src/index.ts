@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import Fastify from 'fastify'
 import { PrismaClient } from '@autodealercloud/database'
 import jwt from 'jsonwebtoken'
