@@ -1,4 +1,6 @@
+// Load environment variables FIRST, before any other imports
 import 'dotenv/config'
+
 import Fastify from 'fastify'
 import { PrismaClient } from '@autodealercloud/database'
 import jwt from 'jsonwebtoken'
