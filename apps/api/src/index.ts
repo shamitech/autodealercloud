@@ -1,12 +1,19 @@
 import Fastify from 'fastify'
+import jwt from '@fastify/jwt'
 import { PrismaClient } from '@autodealercloud/database'
-import { hash, compare } from 'bcrypt'
+import { AuthService } from './auth'
 
 const app = Fastify({
   logger: true,
 })
 
 const prisma = new PrismaClient()
+const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key-change-in-production'
+
+// Register JWT plugin
+await app.register(jwt, {
+  secret: JWT_SECRET,
+})
 
 // Manually register JSON content-type parser
 app.addContentTypeParser('application/json', { parseAs: 'string' }, async (req, body) => {
@@ -24,17 +31,103 @@ app.addHook('onSend', async (request, reply) => {
   reply.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 })
 
+// Middleware to verify JWT token
+async function authenticate(request: any, reply: any) {
+  try {
+    await request.jwtVerify()
+  } catch (err) {
+    reply.status(401).send({ error: 'Unauthorized' })
+  }
+}
+
 // Health check
 app.get('/health', async () => {
   return { status: 'ok', timestamp: new Date().toISOString() }
 })
 
 // ============================================
+// Authentication Routes
+// ============================================
+
+// Register
+app.post('/api/v1/auth/register', async (request: any, reply: any) => {
+  try {
+    const { email, password, name, tenantId } = request.body
+
+    if (!email || !password || !name) {
+      return { error: 'Email, password, and name are required' }
+    }
+
+    const user = await AuthService.register(email, password, name, tenantId)
+    const token = app.jwt.sign({ sub: user.id, email: user.email })
+
+    return { success: true, data: { user, token } }
+  } catch (error: any) {
+    reply.status(400)
+    return { error: error.message }
+  }
+})
+
+// Login
+app.post('/api/v1/auth/login', async (request: any, reply: any) => {
+  try {
+    const { email, password } = request.body
+
+    if (!email || !password) {
+      reply.status(400)
+      return { error: 'Email and password required' }
+    }
+
+    const user = await AuthService.login(email, password)
+    const token = app.jwt.sign({ sub: user.id, email: user.email })
+
+    return { success: true, data: { user, token } }
+  } catch (error: any) {
+    reply.status(401)
+    return { error: error.message }
+  }
+})
+
+// Get current user
+app.get('/api/v1/auth/me', { preHandler: authenticate }, async (request: any) => {
+  try {
+    const userId = request.user.sub
+    const user = await AuthService.getUserById(userId)
+    return { success: true, data: user }
+  } catch (error: any) {
+    return { error: error.message }
+  }
+})
+
+// Verify token
+app.post('/api/v1/auth/verify', async (request: any, reply: any) => {
+  try {
+    const token = request.headers.authorization?.split(' ')[1]
+
+    if (!token) {
+      reply.status(401)
+      return { error: 'No token provided' }
+    }
+
+    try {
+      const decoded = app.jwt.verify(token)
+      return { success: true, data: decoded }
+    } catch (err) {
+      reply.status(401)
+      return { error: 'Invalid token' }
+    }
+  } catch (error: any) {
+    reply.status(400)
+    return { error: error.message }
+  }
+})
+
+// ============================================
 // Tenant Routes
 // ============================================
 
-// Create tenant
-app.post('/api/v1/tenants', async (request: any) => {
+// Create tenant (protected)
+app.post('/api/v1/tenants', { preHandler: authenticate }, async (request: any) => {
   try {
     const { name, slug, description } = request.body
 
@@ -107,8 +200,8 @@ app.get('/api/v1/tenants', async (request: any) => {
   }
 })
 
-// Update tenant
-app.put('/api/v1/tenants/:id', async (request: any) => {
+// Update tenant (protected)
+app.put('/api/v1/tenants/:id', { preHandler: authenticate }, async (request: any) => {
   try {
     const { id } = request.params
     const { name, description, status } = request.body
@@ -128,8 +221,8 @@ app.put('/api/v1/tenants/:id', async (request: any) => {
   }
 })
 
-// Delete tenant
-app.delete('/api/v1/tenants/:id', async (request: any) => {
+// Delete tenant (protected)
+app.delete('/api/v1/tenants/:id', { preHandler: authenticate }, async (request: any) => {
   try {
     const { id } = request.params
 
@@ -147,8 +240,8 @@ app.delete('/api/v1/tenants/:id', async (request: any) => {
 // User Routes
 // ============================================
 
-// Create user
-app.post('/api/v1/users', async (request: any) => {
+// Create user (protected)
+app.post('/api/v1/users', { preHandler: authenticate }, async (request: any) => {
   try {
     const { email, password, firstName, lastName, tenantId, role } = request.body
 
@@ -156,22 +249,8 @@ app.post('/api/v1/users', async (request: any) => {
       return { error: 'Email and password are required' }
     }
 
-    const hashedPassword = await hash(password, 10)
-
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        firstName,
-        lastName,
-        role: role || 'editor',
-        tenantId,
-      },
-    })
-
-    // Exclude password from response
-    const { password: _, ...userWithoutPassword } = user
-    return { success: true, data: userWithoutPassword }
+    const user = await AuthService.register(email, password, firstName || email, tenantId)
+    return { success: true, data: user }
   } catch (error: any) {
     return { error: error.message }
   }
@@ -271,8 +350,8 @@ app.get('/api/v1/components', async (request: any) => {
   }
 })
 
-// Create component
-app.post('/api/v1/components', async (request: any) => {
+// Create component (protected)
+app.post('/api/v1/components', { preHandler: authenticate }, async (request: any) => {
   try {
     const { type, name, slug, description, category, metadata } = request.body
 
@@ -324,8 +403,8 @@ app.get('/api/v1/components/:id', async (request: any) => {
   }
 })
 
-// Create component version
-app.post('/api/v1/components/:componentId/versions', async (request: any) => {
+// Create component version (protected)
+app.post('/api/v1/components/:componentId/versions', { preHandler: authenticate }, async (request: any) => {
   try {
     const { componentId } = request.params
     const { version, htmlContent, cssContent, jsContent } = request.body
@@ -380,8 +459,8 @@ app.get('/api/v1/tenants/:tenantId/pages', async (request: any) => {
   }
 })
 
-// Create page
-app.post('/api/v1/tenants/:tenantId/pages', async (request: any) => {
+// Create page (protected)
+app.post('/api/v1/tenants/:tenantId/pages', { preHandler: authenticate }, async (request: any) => {
   try {
     const { tenantId } = request.params
     const { title, slug, description, content, metadata, templateId } = request.body
@@ -431,8 +510,8 @@ app.get('/api/v1/pages/:pageId', async (request: any) => {
   }
 })
 
-// Update page
-app.put('/api/v1/pages/:pageId', async (request: any) => {
+// Update page (protected)
+app.put('/api/v1/pages/:pageId', { preHandler: authenticate }, async (request: any) => {
   try {
     const { pageId } = request.params
     const { title, description, content, metadata, status, templateId } = request.body
@@ -455,8 +534,8 @@ app.put('/api/v1/pages/:pageId', async (request: any) => {
   }
 })
 
-// Publish page
-app.post('/api/v1/pages/:pageId/publish', async (request: any) => {
+// Publish page (protected)
+app.post('/api/v1/pages/:pageId/publish', { preHandler: authenticate }, async (request: any) => {
   try {
     const { pageId } = request.params
 
@@ -474,8 +553,8 @@ app.post('/api/v1/pages/:pageId/publish', async (request: any) => {
   }
 })
 
-// Delete page
-app.delete('/api/v1/pages/:pageId', async (request: any) => {
+// Delete page (protected)
+app.delete('/api/v1/pages/:pageId', { preHandler: authenticate }, async (request: any) => {
   try {
     const { pageId } = request.params
 
@@ -508,8 +587,8 @@ app.get('/api/v1/pages/:pageId/content', async (request: any) => {
   }
 })
 
-// Update content
-app.put('/api/v1/content/:contentId', async (request: any) => {
+// Update content (protected)
+app.put('/api/v1/content/:contentId', { preHandler: authenticate }, async (request: any) => {
   try {
     const { contentId } = request.params
     const { data } = request.body
@@ -527,8 +606,8 @@ app.put('/api/v1/content/:contentId', async (request: any) => {
   }
 })
 
-// Create content
-app.post('/api/v1/pages/:pageId/content', async (request: any) => {
+// Create content (protected)
+app.post('/api/v1/pages/:pageId/content', { preHandler: authenticate }, async (request: any) => {
   try {
     const { pageId } = request.params
     const { tenantId, componentPath, componentType, data } = request.body
@@ -557,8 +636,8 @@ app.post('/api/v1/pages/:pageId/content', async (request: any) => {
 // Analytics Routes
 // ============================================
 
-// Track analytics event
-app.post('/api/v1/analytics/events', async (request: any) => {
+// Track analytics event (protected)
+app.post('/api/v1/analytics/events', { preHandler: authenticate }, async (request: any) => {
   try {
     const { tenantId, eventType, data } = request.body
 
