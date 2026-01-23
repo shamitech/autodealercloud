@@ -1,5 +1,4 @@
 import Fastify from 'fastify'
-import cors from '@fastify/cors'
 import { PrismaClient } from '@autodealercloud/database'
 import { hash, compare } from 'bcrypt'
 
@@ -9,10 +8,11 @@ const app = Fastify({
 
 const prisma = new PrismaClient()
 
-// Register CORS
-await app.register(cors, {
-  origin: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+// Add CORS headers manually
+app.addHook('onSend', async (request, reply) => {
+  reply.header('Access-Control-Allow-Origin', '*')
+  reply.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+  reply.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 })
 
 // Health check
