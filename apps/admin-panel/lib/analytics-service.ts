@@ -36,7 +36,8 @@ class AnalyticsService {
 
   async getEvents(limit: number = 50): Promise<AnalyticsEvent[]> {
     const response = await apiClient.get<AnalyticsResponse>(`/analytics/events?limit=${limit}`)
-    return Array.isArray(response.data) ? response.data : [response.data]
+    const data = Array.isArray(response.data) ? response.data : [response.data]
+    return (data as AnalyticsEvent[])
   }
 
   async trackEvent(eventType: string, eventData?: Record<string, any>): Promise<AnalyticsEvent> {
@@ -44,7 +45,8 @@ class AnalyticsService {
       eventType,
       eventData,
     })
-    return Array.isArray(response.data) ? response.data[0] : response.data
+    const data = Array.isArray(response.data) ? response.data[0] : response.data
+    return (data as AnalyticsEvent)
   }
 }
 
