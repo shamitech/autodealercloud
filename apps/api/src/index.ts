@@ -8,6 +8,15 @@ const app = Fastify({
 
 const prisma = new PrismaClient()
 
+// Manually register JSON content-type parser
+app.addContentTypeParser('application/json', async (request, payload) => {
+  let body = ''
+  for await (const chunk of payload) {
+    body += chunk.toString()
+  }
+  return JSON.parse(body)
+})
+
 // Add CORS headers manually
 app.addHook('onSend', async (request, reply) => {
   reply.header('Access-Control-Allow-Origin', '*')
