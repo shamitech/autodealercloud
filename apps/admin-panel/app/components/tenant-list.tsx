@@ -48,6 +48,15 @@ export function TenantList() {
     )
   }
 
+  if (tenants.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-400 text-lg">No tenants found</p>
+        <p className="text-gray-500 text-sm mt-2">Create your first tenant to get started</p>
+      </div>
+    )
+  }
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left border-collapse">
