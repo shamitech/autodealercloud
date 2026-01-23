@@ -2,9 +2,6 @@ import Fastify from 'fastify'
 import { PrismaClient } from '@autodealercloud/database'
 import jwt from 'jsonwebtoken'
 import { AuthService } from './auth'
-import { RegisterSchema, LoginSchema, CreateTenantSchema, CreateUserSchema, CreatePageSchema, TrackEventSchema, CreateCustomDomainSchema } from '@autodealercloud/validation'
-import { validateRequest, createValidationError } from '@autodealercloud/validation/dist/middleware'
-import { ZodError } from 'zod'
 
 const app = Fastify({
   logger: true,
@@ -62,14 +59,7 @@ app.get('/health', async () => {
 // Register
 app.post('/api/v1/auth/register', async (request: any, reply: any) => {
   try {
-    // Validate request
-    const validation = validateRequest(RegisterSchema, request.body)
-    if (!validation.success) {
-      reply.status(422)
-      return validation.error
-    }
-
-    const { email, password, name, tenantId } = validation.data
+    const { email, password, name, tenantId } = request.body
 
     const user = await AuthService.register(email, password, name, tenantId)
     const token = jwt.sign({ sub: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' })
@@ -85,14 +75,7 @@ app.post('/api/v1/auth/register', async (request: any, reply: any) => {
 // Login
 app.post('/api/v1/auth/login', async (request: any, reply: any) => {
   try {
-    // Validate request
-    const validation = validateRequest(LoginSchema, request.body)
-    if (!validation.success) {
-      reply.status(422)
-      return validation.error
-    }
-
-    const { email, password } = validation.data
+    const { email, password } = request.body
 
     const user = await AuthService.login(email, password)
     const token = jwt.sign({ sub: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' })
@@ -145,14 +128,7 @@ app.post('/api/v1/auth/verify', async (request: any, reply: any) => {
 // Create tenant (protected)
 app.post('/api/v1/tenants', { preHandler: authenticate }, async (request: any, reply: any) => {
   try {
-    // Validate request
-    const validation = validateRequest(CreateTenantSchema, request.body)
-    if (!validation.success) {
-      reply.status(422)
-      return validation.error
-    }
-
-    const { name, slug, description, email, plan } = validation.data
+    const { name, slug, description, email, plan } = request.body
 
     const tenant = await prisma.tenant.create({
       data: {
@@ -262,14 +238,7 @@ app.delete('/api/v1/tenants/:id', { preHandler: authenticate }, async (request: 
 // Create user (protected)
 app.post('/api/v1/users', { preHandler: authenticate }, async (request: any, reply: any) => {
   try {
-    // Validate request
-    const validation = validateRequest(CreateUserSchema, request.body)
-    if (!validation.success) {
-      reply.status(422)
-      return validation.error
-    }
-
-    const { email, password, name, tenantId, role } = validation.data
+    const { email, password, name, tenantId, role } = request.body
 
     const user = await AuthService.register(email, password, name, tenantId)
     return { success: true, data: user }
