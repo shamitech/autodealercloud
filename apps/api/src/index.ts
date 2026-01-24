@@ -148,8 +148,8 @@ app.post('/api/v1/auth/verify', async (request: any, reply: any) => {
 // Tenant Routes
 // ============================================
 
-// Create tenant (protected)
-app.post('/api/v1/tenants', { preHandler: authenticate }, async (request: any, reply: any) => {
+// Create tenant (public for admin panel)
+app.post('/api/v1/tenants', async (request: any, reply: any) => {
   try {
     const { name, slug, description, email, plan } = request.body
 
