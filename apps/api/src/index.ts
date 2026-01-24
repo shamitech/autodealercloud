@@ -210,8 +210,8 @@ app.get('/api/v1/tenants', async (request: any) => {
   }
 })
 
-// Update tenant (protected)
-app.put('/api/v1/tenants/:id', { preHandler: authenticate }, async (request: any) => {
+// Update tenant (public for admin panel)
+app.put('/api/v1/tenants/:id', async (request: any) => {
   try {
     const { id } = request.params
     const { name, description, status } = request.body
@@ -231,8 +231,8 @@ app.put('/api/v1/tenants/:id', { preHandler: authenticate }, async (request: any
   }
 })
 
-// Delete tenant (protected)
-app.delete('/api/v1/tenants/:id', { preHandler: authenticate }, async (request: any) => {
+// Delete tenant (public for admin panel)
+app.delete('/api/v1/tenants/:id', async (request: any) => {
   try {
     const { id } = request.params
 
