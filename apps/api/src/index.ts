@@ -29,15 +29,6 @@ app.register(fastifyCors, {
   preflightContinue: false,
 })
 
-// Manually register JSON content-type parser
-app.addContentTypeParser('application/json', { parseAs: 'string' }, async (req: any, body: string) => {
-  try {
-    return JSON.parse(body)
-  } catch (err) {
-    throw new Error('Invalid JSON')
-  }
-})
-
 // Middleware to verify JWT token
 async function authenticate(request: any, reply: any) {
   try {
