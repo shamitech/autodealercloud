@@ -180,27 +180,27 @@ export function DomainManagement() {
                 </tr>
               </thead>
               <tbody>
-                {customDomains.map(d => (
-                  <tr key={d.id} className="border-b border-gray-800 hover:bg-gray-800 transition">
-                    <td className="py-3 px-4 font-mono">{d.domain}</td>
-                    <td className="py-3 px-4 text-gray-400">{d.tenantId.substring(0, 8)}</td>
+                {customDomains?.filter(d => d && d.id).map(d => (
+                  <tr key={d?.id} className="border-b border-gray-800 hover:bg-gray-800 transition">
+                    <td className="py-3 px-4 font-mono">{d?.domain || 'N/A'}</td>
+                    <td className="py-3 px-4 text-gray-400">{d?.tenantId?.substring(0, 8) || 'N/A'}</td>
                     <td className="py-3 px-4">
                       <span className={`px-3 py-1 rounded-full text-xs ${
-                        d.deployed ? 'bg-green-900 text-green-100' : 'bg-yellow-900 text-yellow-100'
+                        d?.deployed ? 'bg-green-900 text-green-100' : 'bg-yellow-900 text-yellow-100'
                       }`}>
-                        {d.deployed ? 'Deployed' : 'Not Deployed'}
+                        {d?.deployed ? 'Deployed' : 'Not Deployed'}
                       </span>
                     </td>
                     <td className="py-3 px-4">
                       <span className={`px-3 py-1 rounded-full text-xs ${
-                        d.dnsVerified ? 'bg-green-900 text-green-100' : 'bg-gray-700 text-gray-300'
+                        d?.dnsVerified ? 'bg-green-900 text-green-100' : 'bg-gray-700 text-gray-300'
                       }`}>
-                        {d.dnsVerified ? 'DNS Verified' : 'DNS Pending'}
+                        {d?.dnsVerified ? 'DNS Verified' : 'DNS Pending'}
                       </span>
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex gap-2">
-                        {!d.deployed && (
+                        {d && !d.deployed && (
                           <button
                             onClick={() => handlePreviewDeploy(d.id)}
                             disabled={deploying}
@@ -209,12 +209,14 @@ export function DomainManagement() {
                             {deploying && selectedDomainId === d.id ? 'Deploying...' : 'Deploy'}
                           </button>
                         )}
-                        <button
-                          onClick={() => handleDeleteCustomDomain(d.id)}
-                          className="text-red-400 hover:text-red-300 text-sm"
-                        >
-                          Delete
-                        </button>
+                        {d && (
+                          <button
+                            onClick={() => handleDeleteCustomDomain(d.id)}
+                            className="text-red-400 hover:text-red-300 text-sm"
+                          >
+                            Delete
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -228,38 +230,38 @@ export function DomainManagement() {
             )}
           </div>
 
-          {customDomains.length > 0 && (
+          {customDomains && customDomains.length > 0 && (
             <div className="mt-8">
               <h3 className="text-lg font-bold mb-4">DNS Verification</h3>
-              {customDomains.map(d => (
-                <div key={d.id} className="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-4">
+              {customDomains.filter(d => d && d.id).map(d => (
+                <div key={d?.id} className="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-4">
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <p className="font-mono text-blue-400 text-lg">{d.domain}</p>
-                      <p className="text-sm text-gray-400 mt-1">Tenant: {d.tenantId.substring(0, 8)}</p>
+                      <p className="font-mono text-blue-400 text-lg">{d?.domain || 'N/A'}</p>
+                      <p className="text-sm text-gray-400 mt-1">Tenant: {d?.tenantId?.substring(0, 8) || 'N/A'}</p>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-xs ${
-                      d.dnsVerified ? 'bg-green-900 text-green-100' : 'bg-yellow-900 text-yellow-100'
+                      d?.dnsVerified ? 'bg-green-900 text-green-100' : 'bg-yellow-900 text-yellow-100'
                     }`}>
-                      {d.dnsVerified ? '✓ DNS Verified' : 'Pending DNS'}
+                      {d?.dnsVerified ? '✓ DNS Verified' : 'Pending DNS'}
                     </span>
                   </div>
 
-                  {!d.dnsVerified && (
+                  {d && !d.dnsVerified && (
                     <div className="space-y-3">
                       <p className="text-sm text-gray-300">
                         Add this DNS record to your domain registrar to verify ownership:
                       </p>
                       <div className="bg-gray-900 border border-gray-600 rounded p-3">
                         <p className="text-xs text-gray-400 mb-2">Record Type: TXT</p>
-                        <p className="text-xs text-gray-400 mb-2">Name: _autodealercloud.{d.domain}</p>
+                        <p className="text-xs text-gray-400 mb-2">Name: _autodealercloud.{d?.domain}</p>
                         <div className="flex items-center gap-2">
                           <code className="flex-1 text-xs text-gray-300 bg-gray-800 p-2 rounded font-mono break-all">
-                            {d.dnsRecord || 'v=autodealercloud; verification-pending'}
+                            {d?.dnsRecord || 'v=autodealercloud; verification-pending'}
                           </code>
                           <button
                             onClick={() => {
-                              navigator.clipboard.writeText(`_autodealercloud.${d.domain}`)
+                              navigator.clipboard.writeText(`_autodealercloud.${d?.domain}`)
                             }}
                             className="text-blue-400 hover:text-blue-300 text-xs whitespace-nowrap"
                           >
@@ -268,16 +270,16 @@ export function DomainManagement() {
                         </div>
                       </div>
                       <button
-                        onClick={() => handleVerifyDns(d.id)}
-                        disabled={verifyingDns === d.id}
+                        onClick={() => d && handleVerifyDns(d.id)}
+                        disabled={verifyingDns === d?.id}
                         className="w-full bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-medium text-sm disabled:opacity-50"
                       >
-                        {verifyingDns === d.id ? 'Verifying...' : 'Verify DNS Record'}
+                        {verifyingDns === d?.id ? 'Verifying...' : 'Verify DNS Record'}
                       </button>
                     </div>
                   )}
 
-                  {d.dnsVerified && (
+                  {d?.dnsVerified && (
                     <div className="bg-green-900 border border-green-700 rounded p-3">
                       <p className="text-green-100 text-sm">✓ DNS record verified successfully!</p>
                     </div>
@@ -299,17 +301,17 @@ export function DomainManagement() {
               </tr>
             </thead>
             <tbody>
-              {authDomains.map(d => (
-                <tr key={d.id} className="border-b border-gray-800 hover:bg-gray-800 transition">
-                  <td className="py-3 px-4 font-mono">{d.domain}</td>
+              {authDomains?.filter(d => d && d.id).map(d => (
+                <tr key={d?.id} className="border-b border-gray-800 hover:bg-gray-800 transition">
+                  <td className="py-3 px-4 font-mono">{d?.domain || 'N/A'}</td>
                   <td className="py-3 px-4 text-gray-400 text-sm">
-                    {new Date(d.createdAt).toLocaleDateString()}
+                    {d?.createdAt ? new Date(d.createdAt).toLocaleDateString() : 'N/A'}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {authDomains.length === 0 && (
+          {!authDomains || authDomains.length === 0 && (
             <div className="text-center py-8 text-gray-400">
               No auth domains configured yet.
             </div>
@@ -327,17 +329,17 @@ export function DomainManagement() {
               </tr>
             </thead>
             <tbody>
-              {publishDomains.map(d => (
-                <tr key={d.id} className="border-b border-gray-800 hover:bg-gray-800 transition">
-                  <td className="py-3 px-4 font-mono">{d.domain}</td>
+              {publishDomains?.filter(d => d && d.id).map(d => (
+                <tr key={d?.id} className="border-b border-gray-800 hover:bg-gray-800 transition">
+                  <td className="py-3 px-4 font-mono">{d?.domain || 'N/A'}</td>
                   <td className="py-3 px-4 text-gray-400 text-sm">
-                    {new Date(d.createdAt).toLocaleDateString()}
+                    {d?.createdAt ? new Date(d.createdAt).toLocaleDateString() : 'N/A'}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {publishDomains.length === 0 && (
+          {!publishDomains || publishDomains.length === 0 && (
             <div className="text-center py-8 text-gray-400">
               No publish domains configured yet.
             </div>

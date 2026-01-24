@@ -40,7 +40,7 @@ class DomainService {
       }
       const domains = Array.isArray(response.data) ? response.data : []
       // Filter out any undefined or invalid items
-      return domains.filter(d => d && d.id && d.domain)
+      return domains.filter((d: any) => d && d.id && d.domain)
     } catch (error) {
       console.error('Error fetching custom domains:', error)
       return []
@@ -64,7 +64,7 @@ class DomainService {
       const response = await apiClient.get<any>('/auth-domains')
       if (!response || !response.data) return []
       const domains = Array.isArray(response.data) ? response.data : []
-      return domains.filter(d => d && d.id && d.domain)
+      return domains.filter((d: any) => d && d.id && d.domain)
     } catch (error) {
       console.error('Error fetching auth domains:', error)
       return []
@@ -88,7 +88,7 @@ class DomainService {
       const response = await apiClient.get<any>('/publish-domains')
       if (!response || !response.data) return []
       const domains = Array.isArray(response.data) ? response.data : []
-      return domains.filter(d => d && d.id && d.domain)
+      return domains.filter((d: any) => d && d.id && d.domain)
     } catch (error) {
       console.error('Error fetching publish domains:', error)
       return []
