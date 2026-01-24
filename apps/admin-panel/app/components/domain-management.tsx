@@ -50,15 +50,18 @@ export function DomainManagement() {
     if (!newDomain || !selectedTenant) return
 
     try {
+      setError(null)
       const domain = await domainService.createCustomDomain(selectedTenant, newDomain)
-      if (domain && domain.id && domain.domain) {
-        setCustomDomains([...customDomains, domain])
+      console.log('Domain created successfully:', domain)
+      
+      if (domain && domain.id) {
+        // Reload all domains to ensure data is fresh and consistent
+        await loadData()
         setNewDomain('')
         setSelectedTenant('')
-        setError(null)
       } else {
         console.error('Invalid domain response:', domain)
-        setError('Domain created but response was invalid. Refreshing...')
+        setError('Domain was created but response was invalid. Refreshing data...')
         await loadData()
       }
     } catch (err) {

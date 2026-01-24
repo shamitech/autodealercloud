@@ -53,20 +53,25 @@ class DomainService {
         tenantId,
         domain,
       })
-      console.log('Create domain response:', response)
-      // API returns { success: true, data: domain }
-      if (response && response.data) {
-        const domainData = response.data
-        if (domainData && domainData.id && domainData.domain) {
-          return domainData
-        }
+      
+      // Handle different response formats
+      let domainData = null
+      
+      // Format 1: { success: true, data: {...} }
+      if (response?.data) {
+        domainData = response.data
       }
-      // Fallback: if response is the domain object directly
-      if (response && response.id && response.domain) {
-        return response
+      // Format 2: response IS the domain object
+      else if (response?.id && response?.domain) {
+        domainData = response
       }
-      console.error('Invalid response structure:', response)
-      throw new Error('Invalid response from API: missing domain data')
+      
+      if (domainData && domainData.id && domainData.domain) {
+        return domainData
+      }
+      
+      console.error('Invalid domain response structure:', response)
+      throw new Error('API returned invalid domain data')
     } catch (error) {
       console.error('Error creating custom domain:', error)
       throw error
