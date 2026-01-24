@@ -14,6 +14,7 @@ import { AuthService } from './auth'
 
 const app = Fastify({
   logger: true,
+  bodyLimit: 1048576,
 })
 
 const prisma = new PrismaClient()
