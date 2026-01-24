@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { CustomDomain, domainService, AuthDomain, PublishDomain } from '@/lib/domain-service'
 import { tenantService, Tenant } from '@/lib/tenant-service'
+import { ConfigPreviewModal } from './config-preview-modal'
 
 export function DomainManagement() {
   const [customDomains, setCustomDomains] = useState<CustomDomain[]>([])
@@ -14,6 +15,9 @@ export function DomainManagement() {
   const [activeTab, setActiveTab] = useState<'custom' | 'auth' | 'publish'>('custom')
   const [newDomain, setNewDomain] = useState('')
   const [selectedTenant, setSelectedTenant] = useState('')
+  const [showPreview, setShowPreview] = useState(false)
+  const [selectedDomainId, setSelectedDomainId] = useState<string | null>(null)
+  const [deploying, setDeploying] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -61,6 +65,31 @@ export function DomainManagement() {
       setCustomDomains(customDomains.filter(d => d.id !== id))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete domain')
+    }
+  }
+
+  const handlePreviewDeploy = (id: string) => {
+    setSelectedDomainId(id)
+    setShowPreview(true)
+  }
+
+  const handleDeploy = async (id: string) => {
+    if (!confirm('Deploy this domain? This will create Nginx configuration and provision SSL certificate.')) return
+    try {
+      setDeploying(true)
+      const result = await domainService.deployCustomDomain(id)
+      if (result.success) {
+        setShowPreview(false)
+        setSelectedDomainId(null)
+        await loadData()
+        setError(null)
+      } else {
+        setError(result.error || 'Deployment failed')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to deploy domain')
+    } finally {
+      setDeploying(false)
     }
   }
 
@@ -152,12 +181,23 @@ export function DomainManagement() {
                       </span>
                     </td>
                     <td className="py-3 px-4">
-                      <button
-                        onClick={() => handleDeleteCustomDomain(d.id)}
-                        className="text-red-400 hover:text-red-300 text-sm"
-                      >
-                        Delete
-                      </button>
+                      <div className="flex gap-2">
+                        {!d.verified && (
+                          <button
+                            onClick={() => handlePreviewDeploy(d.id)}
+                            disabled={deploying}
+                            className="text-blue-400 hover:text-blue-300 text-sm disabled:opacity-50"
+                          >
+                            {deploying && selectedDomainId === d.id ? 'Deploying...' : 'Deploy'}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDeleteCustomDomain(d.id)}
+                          className="text-red-400 hover:text-red-300 text-sm"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -226,6 +266,18 @@ export function DomainManagement() {
             </div>
           )}
         </div>
+      )}
+
+      {showPreview && selectedDomainId && (
+        <ConfigPreviewModal
+          domainId={selectedDomainId}
+          onClose={() => {
+            setShowPreview(false)
+            setSelectedDomainId(null)
+          }}
+          onDeploy={() => handleDeploy(selectedDomainId)}
+          isDeploying={deploying}
+        />
       )}
     </div>
   )

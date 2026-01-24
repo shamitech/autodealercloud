@@ -85,6 +85,16 @@ class DomainService {
   async deletePublishDomain(id: string): Promise<void> {
     await apiClient.delete(`/publish-domains/${id}`)
   }
+
+  async previewCustomDomainConfig(id: string): Promise<{ domain: string; baseDomain: string; config: string }> {
+    const response = await apiClient.get(`/custom-domains/${id}/preview-config`)
+    return response as any
+  }
+
+  async deployCustomDomain(id: string): Promise<{ success: boolean; message?: string; ssl?: string; error?: string }> {
+    const response = await apiClient.post(`/custom-domains/${id}/deploy`, {})
+    return response as any
+  }
 }
 
 export const domainService = new DomainService()
