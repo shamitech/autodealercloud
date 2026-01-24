@@ -48,11 +48,20 @@ class DomainService {
   }
 
   async createCustomDomain(tenantId: string, domain: string): Promise<CustomDomain> {
-    const response = await apiClient.post<any>('/custom-domains', {
-      tenantId,
-      domain,
-    })
-    return response.data
+    try {
+      const response = await apiClient.post<any>('/custom-domains', {
+        tenantId,
+        domain,
+      })
+      // API returns { success: true, data: domain }
+      if (response && response.data) {
+        return response.data
+      }
+      throw new Error('Invalid response from API')
+    } catch (error) {
+      console.error('Error creating custom domain:', error)
+      throw error
+    }
   }
 
   async deleteCustomDomain(id: string): Promise<void> {
@@ -72,11 +81,19 @@ class DomainService {
   }
 
   async createAuthDomain(domain: string, description?: string): Promise<AuthDomain> {
-    const response = await apiClient.post<any>('/auth-domains', {
-      domain,
-      description,
-    })
-    return response.data
+    try {
+      const response = await apiClient.post<any>('/auth-domains', {
+        domain,
+        description,
+      })
+      if (response && response.data) {
+        return response.data
+      }
+      throw new Error('Invalid response from API')
+    } catch (error) {
+      console.error('Error creating auth domain:', error)
+      throw error
+    }
   }
 
   async deleteAuthDomain(id: string): Promise<void> {
@@ -96,11 +113,19 @@ class DomainService {
   }
 
   async createPublishDomain(domain: string, description?: string): Promise<PublishDomain> {
-    const response = await apiClient.post<any>('/publish-domains', {
-      domain,
-      description,
-    })
-    return response.data
+    try {
+      const response = await apiClient.post<any>('/publish-domains', {
+        domain,
+        description,
+      })
+      if (response && response.data) {
+        return response.data
+      }
+      throw new Error('Invalid response from API')
+    } catch (error) {
+      console.error('Error creating publish domain:', error)
+      throw error
+    }
   }
 
   async deletePublishDomain(id: string): Promise<void> {
@@ -108,23 +133,55 @@ class DomainService {
   }
 
   async previewCustomDomainConfig(id: string): Promise<{ domain: string; baseDomain: string; config: string }> {
-    const response = await apiClient.get<any>(`/custom-domains/${id}/preview-config`)
-    return response
+    try {
+      const response = await apiClient.get<any>(`/custom-domains/${id}/preview-config`)
+      if (response && response.data) {
+        return response.data
+      }
+      throw new Error('Invalid response from API')
+    } catch (error) {
+      console.error('Error previewing config:', error)
+      throw error
+    }
   }
 
   async deployCustomDomain(id: string): Promise<{ success: boolean; message?: string; ssl?: string; error?: string }> {
-    const response = await apiClient.post<any>(`/custom-domains/${id}/deploy`, {})
-    return response
+    try {
+      const response = await apiClient.post<any>(`/custom-domains/${id}/deploy`, {})
+      if (response && response.data) {
+        return response.data
+      }
+      return response || { success: false, error: 'Unknown error' }
+    } catch (error) {
+      console.error('Error deploying domain:', error)
+      return { success: false, error: error instanceof Error ? error.message : 'Deployment failed' }
+    }
   }
 
   async generateDnsRecord(id: string): Promise<{ success: boolean; dnsRecord?: string; dnsName?: string; error?: string }> {
-    const response = await apiClient.post<any>(`/custom-domains/${id}/generate-dns`, {})
-    return response
+    try {
+      const response = await apiClient.post<any>(`/custom-domains/${id}/generate-dns`, {})
+      if (response && response.data) {
+        return response.data
+      }
+      return response || { success: false, error: 'Unknown error' }
+    } catch (error) {
+      console.error('Error generating DNS record:', error)
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to generate DNS record' }
+    }
   }
 
   async verifyDnsRecord(id: string): Promise<{ success: boolean; message?: string; error?: string }> {
-    const response = await apiClient.post<any>(`/custom-domains/${id}/verify-dns`, {})
-    return response
+    try {
+      const response = await apiClient.post<any>(`/custom-domains/${id}/verify-dns`, {})
+      if (response && response.data) {
+        return response.data
+      }
+      return response || { success: false, error: 'Unknown error' }
+    } catch (error) {
+      console.error('Error verifying DNS record:', error)
+      return { success: false, error: error instanceof Error ? error.message : 'DNS verification failed' }
+    }
   }
 }
 
