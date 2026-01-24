@@ -10,8 +10,8 @@ import Fastify from 'fastify'
 import fastifyCors from '@fastify/cors'
 import { PrismaClient } from '@autodealercloud/database'
 import jwt from 'jsonwebtoken'
-import { AuthService } from './auth'
-import { NginxManager } from './nginx-manager'
+import { AuthService } from './auth.js'
+import { NginxManager } from './nginx-manager.js'
 
 const app = Fastify({
   logger: true,
