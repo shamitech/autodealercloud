@@ -8,7 +8,7 @@ if (!process.env.DATABASE_URL) {
 
 import Fastify from 'fastify'
 import fastifyCors from '@fastify/cors'
-import { PrismaClient } from '@autodealercloud/database'
+import { PrismaClient } from '@prisma/client'
 import jwt from 'jsonwebtoken'
 import { AuthService } from './auth.js'
 import { NginxManager } from './nginx-manager.js'

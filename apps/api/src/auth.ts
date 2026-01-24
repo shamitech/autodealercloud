@@ -1,5 +1,5 @@
 import { hash, compare } from 'bcrypt'
-import { PrismaClient } from '@autodealercloud/database'
+import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 const SALT_ROUNDS = 10
