@@ -31,18 +31,18 @@ export interface DomainResponse {
 
 class DomainService {
   async getCustomDomains(): Promise<CustomDomain[]> {
-    const response = await apiClient.get<DomainResponse>('/custom-domains')
-    const data = Array.isArray(response.data) ? response.data : [response.data]
-    return (data as CustomDomain[])
+    const response = await apiClient.get<any>('/custom-domains')
+    // API returns { success: true, data: [...] }
+    const domains = response.data || []
+    return Array.isArray(domains) ? domains : []
   }
 
   async createCustomDomain(tenantId: string, domain: string): Promise<CustomDomain> {
-    const response = await apiClient.post<DomainResponse>('/custom-domains', {
+    const response = await apiClient.post<any>('/custom-domains', {
       tenantId,
       domain,
     })
-    const data = Array.isArray(response.data) ? response.data[0] : response.data
-    return (data as CustomDomain)
+    return response.data
   }
 
   async deleteCustomDomain(id: string): Promise<void> {
@@ -50,18 +50,17 @@ class DomainService {
   }
 
   async getAuthDomains(): Promise<AuthDomain[]> {
-    const response = await apiClient.get<DomainResponse>('/auth-domains')
-    const data = Array.isArray(response.data) ? response.data : [response.data]
-    return (data as AuthDomain[])
+    const response = await apiClient.get<any>('/auth-domains')
+    const domains = response.data || []
+    return Array.isArray(domains) ? domains : []
   }
 
   async createAuthDomain(domain: string, description?: string): Promise<AuthDomain> {
-    const response = await apiClient.post<DomainResponse>('/auth-domains', {
+    const response = await apiClient.post<any>('/auth-domains', {
       domain,
       description,
     })
-    const data = Array.isArray(response.data) ? response.data[0] : response.data
-    return (data as AuthDomain)
+    return response.data
   }
 
   async deleteAuthDomain(id: string): Promise<void> {
@@ -69,18 +68,17 @@ class DomainService {
   }
 
   async getPublishDomains(): Promise<PublishDomain[]> {
-    const response = await apiClient.get<DomainResponse>('/publish-domains')
-    const data = Array.isArray(response.data) ? response.data : [response.data]
-    return (data as PublishDomain[])
+    const response = await apiClient.get<any>('/publish-domains')
+    const domains = response.data || []
+    return Array.isArray(domains) ? domains : []
   }
 
   async createPublishDomain(domain: string, description?: string): Promise<PublishDomain> {
-    const response = await apiClient.post<DomainResponse>('/publish-domains', {
+    const response = await apiClient.post<any>('/publish-domains', {
       domain,
       description,
     })
-    const data = Array.isArray(response.data) ? response.data[0] : response.data
-    return (data as PublishDomain)
+    return response.data
   }
 
   async deletePublishDomain(id: string): Promise<void> {
@@ -88,23 +86,23 @@ class DomainService {
   }
 
   async previewCustomDomainConfig(id: string): Promise<{ domain: string; baseDomain: string; config: string }> {
-    const response = await apiClient.get(`/custom-domains/${id}/preview-config`)
-    return response as any
+    const response = await apiClient.get<any>(`/custom-domains/${id}/preview-config`)
+    return response
   }
 
   async deployCustomDomain(id: string): Promise<{ success: boolean; message?: string; ssl?: string; error?: string }> {
-    const response = await apiClient.post(`/custom-domains/${id}/deploy`, {})
-    return response as any
+    const response = await apiClient.post<any>(`/custom-domains/${id}/deploy`, {})
+    return response
   }
 
   async generateDnsRecord(id: string): Promise<{ success: boolean; dnsRecord?: string; dnsName?: string; error?: string }> {
-    const response = await apiClient.post(`/custom-domains/${id}/generate-dns`, {})
-    return response as any
+    const response = await apiClient.post<any>(`/custom-domains/${id}/generate-dns`, {})
+    return response
   }
 
   async verifyDnsRecord(id: string): Promise<{ success: boolean; message?: string; error?: string }> {
-    const response = await apiClient.post(`/custom-domains/${id}/verify-dns`, {})
-    return response as any
+    const response = await apiClient.post<any>(`/custom-domains/${id}/verify-dns`, {})
+    return response
   }
 }
 
