@@ -31,10 +31,20 @@ export interface DomainResponse {
 
 class DomainService {
   async getCustomDomains(): Promise<CustomDomain[]> {
-    const response = await apiClient.get<any>('/custom-domains')
-    // API returns { success: true, data: [...] }
-    const domains = response.data || []
-    return Array.isArray(domains) ? domains : []
+    try {
+      const response = await apiClient.get<any>('/custom-domains')
+      // API returns { success: true, data: [...] }
+      if (!response || !response.data) {
+        console.warn('Invalid response from getCustomDomains:', response)
+        return []
+      }
+      const domains = Array.isArray(response.data) ? response.data : []
+      // Filter out any undefined or invalid items
+      return domains.filter(d => d && d.id && d.domain)
+    } catch (error) {
+      console.error('Error fetching custom domains:', error)
+      return []
+    }
   }
 
   async createCustomDomain(tenantId: string, domain: string): Promise<CustomDomain> {
@@ -50,9 +60,15 @@ class DomainService {
   }
 
   async getAuthDomains(): Promise<AuthDomain[]> {
-    const response = await apiClient.get<any>('/auth-domains')
-    const domains = response.data || []
-    return Array.isArray(domains) ? domains : []
+    try {
+      const response = await apiClient.get<any>('/auth-domains')
+      if (!response || !response.data) return []
+      const domains = Array.isArray(response.data) ? response.data : []
+      return domains.filter(d => d && d.id && d.domain)
+    } catch (error) {
+      console.error('Error fetching auth domains:', error)
+      return []
+    }
   }
 
   async createAuthDomain(domain: string, description?: string): Promise<AuthDomain> {
@@ -68,9 +84,15 @@ class DomainService {
   }
 
   async getPublishDomains(): Promise<PublishDomain[]> {
-    const response = await apiClient.get<any>('/publish-domains')
-    const domains = response.data || []
-    return Array.isArray(domains) ? domains : []
+    try {
+      const response = await apiClient.get<any>('/publish-domains')
+      if (!response || !response.data) return []
+      const domains = Array.isArray(response.data) ? response.data : []
+      return domains.filter(d => d && d.id && d.domain)
+    } catch (error) {
+      console.error('Error fetching publish domains:', error)
+      return []
+    }
   }
 
   async createPublishDomain(domain: string, description?: string): Promise<PublishDomain> {
