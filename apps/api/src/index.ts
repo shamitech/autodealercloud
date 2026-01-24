@@ -701,6 +701,217 @@ app.get('/api/v1/tenants/:tenantId/analytics', async (request: any) => {
   }
 })
 
+// ============================================
+// Custom Domain Routes
+// ============================================
+
+// OPTIONS handler for custom-domains
+app.options('/api/v1/custom-domains', (request, reply) => {
+  reply.status(204).send()
+})
+
+app.options('/api/v1/custom-domains/:id', (request, reply) => {
+  reply.status(204).send()
+})
+
+// Get all custom domains
+app.get('/api/v1/custom-domains', async (request: any) => {
+  try {
+    const domains = await prisma.customDomain.findMany({
+      include: { tenant: true },
+    })
+    return { success: true, data: domains }
+  } catch (error: any) {
+    return { error: error.message }
+  }
+})
+
+// Create custom domain
+app.post('/api/v1/custom-domains', async (request: any) => {
+  try {
+    const { domain, tenantId, ssl } = request.body
+
+    const customDomain = await prisma.customDomain.create({
+      data: {
+        domain,
+        tenantId,
+        ssl: ssl || false,
+      },
+    })
+
+    return { success: true, data: customDomain }
+  } catch (error: any) {
+    return { error: error.message }
+  }
+})
+
+// Delete custom domain
+app.delete('/api/v1/custom-domains/:id', async (request: any) => {
+  try {
+    const { id } = request.params
+
+    await prisma.customDomain.delete({
+      where: { id },
+    })
+
+    return { success: true, message: 'Custom domain deleted' }
+  } catch (error: any) {
+    return { error: error.message }
+  }
+})
+
+// ============================================
+// Auth Domain Routes
+// ============================================
+
+// OPTIONS handler for auth-domains
+app.options('/api/v1/auth-domains', (request, reply) => {
+  reply.status(204).send()
+})
+
+app.options('/api/v1/auth-domains/:id', (request, reply) => {
+  reply.status(204).send()
+})
+
+// Get all auth domains
+app.get('/api/v1/auth-domains', async (request: any) => {
+  try {
+    const domains = await prisma.authDomain.findMany({
+      include: { tenant: true },
+    })
+    return { success: true, data: domains }
+  } catch (error: any) {
+    return { error: error.message }
+  }
+})
+
+// Create auth domain
+app.post('/api/v1/auth-domains', async (request: any) => {
+  try {
+    const { subdomain, tenantId, domain } = request.body
+
+    const authDomain = await prisma.authDomain.create({
+      data: {
+        subdomain,
+        tenantId,
+        domain: domain || 'autodealercloud.com',
+      },
+    })
+
+    return { success: true, data: authDomain }
+  } catch (error: any) {
+    return { error: error.message }
+  }
+})
+
+// Delete auth domain
+app.delete('/api/v1/auth-domains/:id', async (request: any) => {
+  try {
+    const { id } = request.params
+
+    await prisma.authDomain.delete({
+      where: { id },
+    })
+
+    return { success: true, message: 'Auth domain deleted' }
+  } catch (error: any) {
+    return { error: error.message }
+  }
+})
+
+// ============================================
+// Publish Domain Routes
+// ============================================
+
+// OPTIONS handler for publish-domains
+app.options('/api/v1/publish-domains', (request, reply) => {
+  reply.status(204).send()
+})
+
+app.options('/api/v1/publish-domains/:id', (request, reply) => {
+  reply.status(204).send()
+})
+
+// Get all publish domains
+app.get('/api/v1/publish-domains', async (request: any) => {
+  try {
+    const domains = await prisma.publishDomain.findMany({
+      include: { tenant: true },
+    })
+    return { success: true, data: domains }
+  } catch (error: any) {
+    return { error: error.message }
+  }
+})
+
+// Create publish domain
+app.post('/api/v1/publish-domains', async (request: any) => {
+  try {
+    const { subdomain, tenantId, domain } = request.body
+
+    const publishDomain = await prisma.publishDomain.create({
+      data: {
+        subdomain,
+        tenantId,
+        domain: domain || 'autodealercloud.com',
+      },
+    })
+
+    return { success: true, data: publishDomain }
+  } catch (error: any) {
+    return { error: error.message }
+  }
+})
+
+// Delete publish domain
+app.delete('/api/v1/publish-domains/:id', async (request: any) => {
+  try {
+    const { id } = request.params
+
+    await prisma.publishDomain.delete({
+      where: { id },
+    })
+
+    return { success: true, message: 'Publish domain deleted' }
+  } catch (error: any) {
+    return { error: error.message }
+  }
+})
+
+// ============================================
+// Users List Route
+// ============================================
+
+// Get all users (public for admin panel)
+app.get('/api/v1/users', async (request: any) => {
+  try {
+    const { tenantId, skip = 0, take = 20 } = request.query
+
+    const users = await prisma.user.findMany({
+      where: tenantId ? { tenantId } : {},
+      skip: parseInt(skip),
+      take: parseInt(take),
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        status: true,
+        createdAt: true,
+      },
+    })
+
+    const total = await prisma.user.count({
+      where: tenantId ? { tenantId } : {},
+    })
+
+    return { success: true, data: users, total }
+  } catch (error: any) {
+    return { error: error.message }
+  }
+})
+
 const PORT = process.env.PORT || 3004
 
 try {
