@@ -4,8 +4,9 @@ export interface CustomDomain {
   id: string
   tenantId: string
   domain: string
-  verified: boolean
-  sslEnabled: boolean
+  deployed: boolean
+  dnsVerified: boolean
+  dnsRecord?: string
   createdAt: string
 }
 
@@ -93,6 +94,16 @@ class DomainService {
 
   async deployCustomDomain(id: string): Promise<{ success: boolean; message?: string; ssl?: string; error?: string }> {
     const response = await apiClient.post(`/custom-domains/${id}/deploy`, {})
+    return response as any
+  }
+
+  async generateDnsRecord(id: string): Promise<{ success: boolean; dnsRecord?: string; dnsName?: string; error?: string }> {
+    const response = await apiClient.post(`/custom-domains/${id}/generate-dns`, {})
+    return response as any
+  }
+
+  async verifyDnsRecord(id: string): Promise<{ success: boolean; message?: string; error?: string }> {
+    const response = await apiClient.post(`/custom-domains/${id}/verify-dns`, {})
     return response as any
   }
 }

@@ -18,6 +18,7 @@ export function DomainManagement() {
   const [showPreview, setShowPreview] = useState(false)
   const [selectedDomainId, setSelectedDomainId] = useState<string | null>(null)
   const [deploying, setDeploying] = useState(false)
+  const [verifyingDns, setVerifyingDns] = useState<string | null>(null)
 
   useEffect(() => {
     loadData()
@@ -93,6 +94,23 @@ export function DomainManagement() {
     }
   }
 
+  const handleVerifyDns = async (id: string) => {
+    try {
+      setVerifyingDns(id)
+      const result = await domainService.verifyDnsRecord(id)
+      if (result.success) {
+        await loadData()
+        setError(null)
+      } else {
+        setError(result.error || 'DNS verification failed')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to verify DNS')
+    } finally {
+      setVerifyingDns(null)
+    }
+  }
+
   if (loading) return <div className="text-gray-400">Loading domains...</div>
 
   return (
@@ -156,8 +174,8 @@ export function DomainManagement() {
                 <tr className="border-b border-gray-700">
                   <th className="py-3 px-4 text-sm font-semibold text-gray-300">Domain</th>
                   <th className="py-3 px-4 text-sm font-semibold text-gray-300">Tenant</th>
-                  <th className="py-3 px-4 text-sm font-semibold text-gray-300">Status</th>
-                  <th className="py-3 px-4 text-sm font-semibold text-gray-300">SSL</th>
+                  <th className="py-3 px-4 text-sm font-semibold text-gray-300">Deployment</th>
+                  <th className="py-3 px-4 text-sm font-semibold text-gray-300">DNS</th>
                   <th className="py-3 px-4 text-sm font-semibold text-gray-300">Actions</th>
                 </tr>
               </thead>
@@ -168,21 +186,21 @@ export function DomainManagement() {
                     <td className="py-3 px-4 text-gray-400">{d.tenantId.substring(0, 8)}</td>
                     <td className="py-3 px-4">
                       <span className={`px-3 py-1 rounded-full text-xs ${
-                        d.verified ? 'bg-green-900 text-green-100' : 'bg-yellow-900 text-yellow-100'
+                        d.deployed ? 'bg-green-900 text-green-100' : 'bg-yellow-900 text-yellow-100'
                       }`}>
-                        {d.verified ? 'Verified' : 'Pending'}
+                        {d.deployed ? 'Deployed' : 'Not Deployed'}
                       </span>
                     </td>
                     <td className="py-3 px-4">
                       <span className={`px-3 py-1 rounded-full text-xs ${
-                        d.sslEnabled ? 'bg-green-900 text-green-100' : 'bg-gray-700 text-gray-300'
+                        d.dnsVerified ? 'bg-green-900 text-green-100' : 'bg-gray-700 text-gray-300'
                       }`}>
-                        {d.sslEnabled ? 'Enabled' : 'Disabled'}
+                        {d.dnsVerified ? 'DNS Verified' : 'DNS Pending'}
                       </span>
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex gap-2">
-                        {!d.verified && (
+                        {!d.deployed && (
                           <button
                             onClick={() => handlePreviewDeploy(d.id)}
                             disabled={deploying}
@@ -209,6 +227,65 @@ export function DomainManagement() {
               </div>
             )}
           </div>
+
+          {customDomains.length > 0 && (
+            <div className="mt-8">
+              <h3 className="text-lg font-bold mb-4">DNS Verification</h3>
+              {customDomains.map(d => (
+                <div key={d.id} className="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-4">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <p className="font-mono text-blue-400 text-lg">{d.domain}</p>
+                      <p className="text-sm text-gray-400 mt-1">Tenant: {d.tenantId.substring(0, 8)}</p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs ${
+                      d.dnsVerified ? 'bg-green-900 text-green-100' : 'bg-yellow-900 text-yellow-100'
+                    }`}>
+                      {d.dnsVerified ? '✓ DNS Verified' : 'Pending DNS'}
+                    </span>
+                  </div>
+
+                  {!d.dnsVerified && (
+                    <div className="space-y-3">
+                      <p className="text-sm text-gray-300">
+                        Add this DNS record to your domain registrar to verify ownership:
+                      </p>
+                      <div className="bg-gray-900 border border-gray-600 rounded p-3">
+                        <p className="text-xs text-gray-400 mb-2">Record Type: TXT</p>
+                        <p className="text-xs text-gray-400 mb-2">Name: _autodealercloud.{d.domain}</p>
+                        <div className="flex items-center gap-2">
+                          <code className="flex-1 text-xs text-gray-300 bg-gray-800 p-2 rounded font-mono break-all">
+                            {d.dnsRecord || 'v=autodealercloud; verification-pending'}
+                          </code>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(`_autodealercloud.${d.domain}`)
+                            }}
+                            className="text-blue-400 hover:text-blue-300 text-xs whitespace-nowrap"
+                          >
+                            Copy Name
+                          </button>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleVerifyDns(d.id)}
+                        disabled={verifyingDns === d.id}
+                        className="w-full bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-medium text-sm disabled:opacity-50"
+                      >
+                        {verifyingDns === d.id ? 'Verifying...' : 'Verify DNS Record'}
+                      </button>
+                    </div>
+                  )}
+
+                  {d.dnsVerified && (
+                    <div className="bg-green-900 border border-green-700 rounded p-3">
+                      <p className="text-green-100 text-sm">✓ DNS record verified successfully!</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

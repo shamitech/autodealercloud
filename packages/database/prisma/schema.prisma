@@ -86,20 +86,23 @@ model PublishDomain {
 }
 
 model CustomDomain {
-  id        String   @id @default(cuid())
-  domain    String   @unique // e.g., "www.myautodealership.com" or "myautodealership.com"
-  type      String   @default("www") // www, root
-  ssl       Boolean  @default(false)
-  verified  Boolean  @default(false)
-  status    String   @default("pending") // pending, verified, failed
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  domain       String   @unique // e.g., "www.myautodealership.com" or "myautodealership.com"
+  type         String   @default("www") // www, root
+  ssl          Boolean  @default(false)
+  deployed     Boolean  @default(false) // Whether Nginx config has been deployed
+  dnsVerified  Boolean  @default(false) // Whether DNS points to this server
+  dnsRecord    String?  // DNS TXT record for verification
+  status       String   @default("pending") // pending, configured, dns-verified, failed
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   tenantId  String
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
-  @@index([verified])
+  @@index([deployed])
+  @@index([dnsVerified])
 }
 
 // ============================================
