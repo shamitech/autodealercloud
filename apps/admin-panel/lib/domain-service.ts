@@ -54,17 +54,8 @@ class DomainService {
         domain,
       })
       
-      // Handle different response formats
-      let domainData = null
-      
-      // Format 1: { success: true, data: {...} }
-      if (response?.data) {
-        domainData = response.data
-      }
-      // Format 2: response IS the domain object
-      else if (response?.id && response?.domain) {
-        domainData = response
-      }
+      // API returns { success: true, data: {...} }
+      const domainData = response?.data
       
       if (domainData && domainData.id && domainData.domain) {
         return domainData
