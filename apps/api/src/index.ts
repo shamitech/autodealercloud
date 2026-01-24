@@ -11,6 +11,7 @@ import fastifyCors from '@fastify/cors'
 import { PrismaClient } from '@autodealercloud/database'
 import jwt from 'jsonwebtoken'
 import { AuthService } from './auth'
+import { NginxManager } from './nginx-manager'
 
 const app = Fastify({
   logger: true,
@@ -750,11 +751,92 @@ app.delete('/api/v1/custom-domains/:id', async (request: any) => {
   try {
     const { id } = request.params
 
+    // Get domain info before deletion
+    const domain = await prisma.customDomain.findUnique({
+      where: { id },
+    })
+
     await prisma.customDomain.delete({
       where: { id },
     })
 
+    // Remove Nginx config if on production
+    if (process.env.NODE_ENV === 'production' && domain) {
+      await NginxManager.removeConfig(domain.tenantId, domain.domain)
+    }
+
     return { success: true, message: 'Custom domain deleted' }
+  } catch (error: any) {
+    return { error: error.message }
+  }
+})
+
+// Deploy custom domain to Nginx
+app.post('/api/v1/custom-domains/:id/deploy', async (request: any) => {
+  try {
+    const { id } = request.params
+    const domain = await prisma.customDomain.findUnique({
+      where: { id },
+    })
+
+    if (!domain) {
+      return { error: 'Domain not found' }
+    }
+
+    // Extract base domain (remove www. if present)
+    const baseDomain = domain.domain.replace(/^www\./, '')
+
+    // Deploy Nginx config
+    const deployResult = await NginxManager.deployConfig(domain.domain, baseDomain, domain.tenantId)
+
+    if (!deployResult.success) {
+      return { error: deployResult.error }
+    }
+
+    // Provision SSL certificate
+    const certResult = await NginxManager.provisionSSLCertificate(domain.domain, baseDomain)
+
+    // Update domain status to verified
+    await prisma.customDomain.update({
+      where: { id },
+      data: {
+        verified: true,
+        status: 'verified',
+      },
+    })
+
+    return {
+      success: true,
+      message: deployResult.message,
+      ssl: certResult.message,
+      configPath: deployResult.configPath,
+    }
+  } catch (error: any) {
+    return { error: error.message }
+  }
+})
+
+// Generate preview of Nginx config (without deploying)
+app.get('/api/v1/custom-domains/:id/preview-config', async (request: any) => {
+  try {
+    const { id } = request.params
+    const domain = await prisma.customDomain.findUnique({
+      where: { id },
+    })
+
+    if (!domain) {
+      return { error: 'Domain not found' }
+    }
+
+    const baseDomain = domain.domain.replace(/^www\./, '')
+    const config = NginxManager.generateConfig(domain.domain, baseDomain, domain.tenantId)
+
+    return {
+      success: true,
+      domain: domain.domain,
+      baseDomain,
+      config,
+    }
   } catch (error: any) {
     return { error: error.message }
   }

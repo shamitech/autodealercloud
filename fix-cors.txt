@@ -1,0 +1,13 @@
+
+// OPTIONS handler for CORS preflight
+const handleOptions = async (request: any, reply: any) => {
+  reply.status(200).send()
+}
+
+// Register OPTIONS routes for API endpoints
+app.options('/api/v1/tenants', handleOptions)
+app.options('/api/v1/tenants/:id', handleOptions)
+app.options('/api/v1/auth/register', handleOptions)
+app.options('/api/v1/auth/login', handleOptions)
+app.options('/api/v1/auth/me', handleOptions)
+
