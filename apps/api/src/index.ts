@@ -7,6 +7,7 @@ if (!process.env.DATABASE_URL) {
 }
 
 import Fastify from 'fastify'
+import fastifyCors from '@fastify/cors'
 import { PrismaClient } from '@autodealercloud/database'
 import jwt from 'jsonwebtoken'
 import { AuthService } from './auth'
@@ -18,6 +19,16 @@ const app = Fastify({
 const prisma = new PrismaClient()
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key-change-in-production'
 
+// Register CORS plugin
+app.register(fastifyCors, {
+  origin: true, // Allow all origins for now
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400,
+  preflightContinue: false,
+})
+
 // Manually register JSON content-type parser
 app.addContentTypeParser('application/json', { parseAs: 'string' }, async (req: any, body: string) => {
   try {
@@ -25,13 +36,6 @@ app.addContentTypeParser('application/json', { parseAs: 'string' }, async (req: 
   } catch (err) {
     throw new Error('Invalid JSON')
   }
-})
-
-// Add CORS headers manually
-app.addHook('onSend', async (request, reply) => {
-  reply.header('Access-Control-Allow-Origin', '*')
-  reply.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-  reply.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 })
 
 // Middleware to verify JWT token
@@ -54,6 +58,18 @@ async function authenticate(request: any, reply: any) {
     reply.status(401).send({ error: 'Unauthorized' })
   }
 }
+
+// OPTIONS handler for CORS preflight
+const handleOptions = async (request: any, reply: any) => {
+  reply.status(200).send()
+}
+
+// Register OPTIONS routes for API endpoints
+app.options('/api/v1/tenants', handleOptions)
+app.options('/api/v1/tenants/:id', handleOptions)
+app.options('/api/v1/auth/register', handleOptions)
+app.options('/api/v1/auth/login', handleOptions)
+app.options('/api/v1/auth/me', handleOptions)
 
 // Health check
 app.get('/health', async () => {
