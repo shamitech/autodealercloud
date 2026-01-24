@@ -51,10 +51,18 @@ export function DomainManagement() {
 
     try {
       const domain = await domainService.createCustomDomain(selectedTenant, newDomain)
-      setCustomDomains([...customDomains, domain])
-      setNewDomain('')
-      setSelectedTenant('')
+      if (domain && domain.id && domain.domain) {
+        setCustomDomains([...customDomains, domain])
+        setNewDomain('')
+        setSelectedTenant('')
+        setError(null)
+      } else {
+        console.error('Invalid domain response:', domain)
+        setError('Domain created but response was invalid. Refreshing...')
+        await loadData()
+      }
     } catch (err) {
+      console.error('Error adding domain:', err)
       setError(err instanceof Error ? err.message : 'Failed to add domain')
     }
   }
