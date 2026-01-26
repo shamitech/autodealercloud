@@ -55,11 +55,8 @@ async function renderPage(tenantId: string, slug: string) {
         status: 'published',
       },
       include: {
-        content: {
-          include: {
-            tenant: true,
-          },
-        },
+        tenant: true,
+        template: true,
       },
     })
 
@@ -116,6 +113,7 @@ app.get('/', async (request: any, reply: any) => {
         slug: page.slug,
         description: page.description,
         content: page.content,
+        metadata: page.metadata,
         publishedAt: page.publishedAt,
       },
       tenant: {
@@ -171,6 +169,7 @@ app.get('/:slug', async (request: any, reply: any) => {
         slug: page.slug,
         description: page.description,
         content: page.content,
+        metadata: page.metadata,
         publishedAt: page.publishedAt,
       },
       tenant: {
