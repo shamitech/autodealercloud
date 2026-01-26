@@ -786,15 +786,17 @@ app.post('/api/v1/custom-domains/:id/deploy', async (request: any) => {
     // Extract base domain (remove www. if present)
     const baseDomain = domain.domain.replace(/^www\./, '')
 
-    // Deploy Nginx config
+    // IMPORTANT: Provision SSL certificate FIRST before deploying nginx config
+    // This ensures the certificate exists when nginx tries to load it
+    const certResult = await NginxManager.provisionSSLCertificate(domain.domain, baseDomain)
+    console.log('SSL provisioning result:', certResult)
+
+    // Then deploy Nginx config (which references the now-provisioned certificates)
     const deployResult = await NginxManager.deployConfig(domain.domain, baseDomain, domain.tenantId)
 
     if (!deployResult.success) {
       return { error: deployResult.error }
     }
-
-    // Provision SSL certificate
-    const certResult = await NginxManager.provisionSSLCertificate(domain.domain, baseDomain)
 
     // Update domain status to deployed
     await prisma.customDomain.update({

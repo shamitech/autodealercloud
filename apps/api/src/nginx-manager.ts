@@ -137,6 +137,7 @@ server {
 
   /**
    * Provision SSL certificate using certbot
+   * This should be called BEFORE deployConfig to ensure certificates exist
    */
   static async provisionSSLCertificate(
     customDomain: string,
@@ -147,34 +148,51 @@ server {
       const certPath = `/etc/letsencrypt/live/${baseDomain}`
       try {
         fs.accessSync(certPath)
+        console.log(`SSL certificate already exists for ${baseDomain}`)
         return {
           success: true,
           message: `SSL certificate already exists for ${baseDomain}`,
         }
       } catch {
         // Certificate doesn't exist, request new one
+        console.log(`Certificate not found, requesting new one for ${baseDomain}`)
       }
 
       // Request certificate with both domain variants
-      const { stdout, stderr } = await execAsync(
-        `certbot certonly --nginx -d ${customDomain} -d ${baseDomain} --non-interactive --agree-tos --email admin@autodealercloud.com --expand 2>&1`,
-        { timeout: 60000 }
-      )
+      // Use --expand flag to add additional domain if cert already exists
+      try {
+        const { stdout, stderr } = await execAsync(
+          `certbot certonly --standalone -d ${customDomain} -d ${baseDomain} --non-interactive --agree-tos --email admin@autodealercloud.com 2>&1`,
+          { timeout: 120000 }
+        )
+        console.log('Certbot output:', stdout)
+        if (stderr) console.log('Certbot stderr:', stderr)
 
-      console.log('Certbot output:', stdout)
-
-      return {
-        success: true,
-        message: `SSL certificate provisioned successfully for ${customDomain}`,
+        return {
+          success: true,
+          message: `SSL certificate provisioned successfully for ${customDomain}`,
+        }
+      } catch (certbotError: any) {
+        // If certbot fails, try with --expand in case partial cert exists
+        try {
+          const { stdout } = await execAsync(
+            `certbot certonly --standalone -d ${customDomain} -d ${baseDomain} --non-interactive --agree-tos --email admin@autodealercloud.com --expand 2>&1`,
+            { timeout: 120000 }
+          )
+          console.log('Certbot expand output:', stdout)
+          return {
+            success: true,
+            message: `SSL certificate provisioned/expanded successfully for ${customDomain}`,
+          }
+        } catch (expandError: any) {
+          console.warn('Certbot provisioning failed:', certbotError.message)
+          throw new Error(`SSL certificate provisioning failed: ${certbotError.message}`)
+        }
       }
     } catch (error: any) {
-      // Don't fail deployment if cert provisioning fails
-      // The admin can manually run certbot later
-      console.warn('SSL provisioning warning:', error.message)
-      return {
-        success: true,
-        message: `Nginx configured but SSL certificate needs manual setup. Run: certbot certonly --nginx -d ${customDomain} -d ${baseDomain}`,
-      }
+      console.error('SSL provisioning error:', error.message)
+      // Throw error so deployment fails and user knows cert is needed
+      throw error
     }
   }
 
