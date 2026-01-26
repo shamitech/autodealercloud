@@ -140,27 +140,21 @@ class DomainService {
   async previewCustomDomainConfig(id: string): Promise<{ domain: string; baseDomain: string; config: string }> {
     try {
       const response = await apiClient.get<any>(`/custom-domains/${id}/preview-config`)
-      console.log('Preview config response:', response)
       
       // API returns { success: true, domain, baseDomain, config }
-      if (!response) {
-        throw new Error('No response from API')
-      }
-      
-      if (response.error) {
+      if (response?.error) {
         throw new Error(response.error)
       }
       
-      if (response.success && response.domain && response.config) {
+      if (response?.domain && response?.config) {
         return {
           domain: response.domain,
-          baseDomain: response.baseDomain,
+          baseDomain: response.baseDomain || response.domain,
           config: response.config,
         }
       }
       
-      console.error('Unexpected response structure:', response)
-      throw new Error(`Invalid response structure: missing required fields`)
+      throw new Error('Invalid response from API')
     } catch (error) {
       console.error('Error previewing config:', error)
       throw error
