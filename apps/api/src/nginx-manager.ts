@@ -158,11 +158,11 @@ server {
         console.log(`Certificate not found, requesting new one for ${baseDomain}`)
       }
 
-      // Request certificate with both domain variants
-      // Use --expand flag to add additional domain if cert already exists
+      // Request certificate with nginx plugin (works with nginx already running)
+      // The nginx plugin modifies the nginx config temporarily for verification
       try {
         const { stdout, stderr } = await execAsync(
-          `certbot certonly --standalone -d ${customDomain} -d ${baseDomain} --non-interactive --agree-tos --email admin@autodealercloud.com 2>&1`,
+          `certbot certonly --nginx -d ${customDomain} -d ${baseDomain} --non-interactive --agree-tos --email admin@autodealercloud.com 2>&1`,
           { timeout: 120000 }
         )
         console.log('Certbot output:', stdout)
@@ -173,10 +173,10 @@ server {
           message: `SSL certificate provisioned successfully for ${customDomain}`,
         }
       } catch (certbotError: any) {
-        // If certbot fails, try with --expand in case partial cert exists
+        // If nginx plugin fails, try with --expand flag in case partial cert exists
         try {
           const { stdout } = await execAsync(
-            `certbot certonly --standalone -d ${customDomain} -d ${baseDomain} --non-interactive --agree-tos --email admin@autodealercloud.com --expand 2>&1`,
+            `certbot certonly --nginx -d ${customDomain} -d ${baseDomain} --non-interactive --agree-tos --email admin@autodealercloud.com --expand 2>&1`,
             { timeout: 120000 }
           )
           console.log('Certbot expand output:', stdout)
@@ -185,8 +185,10 @@ server {
             message: `SSL certificate provisioned/expanded successfully for ${customDomain}`,
           }
         } catch (expandError: any) {
-          console.warn('Certbot provisioning failed:', certbotError.message)
-          throw new Error(`SSL certificate provisioning failed: ${certbotError.message}`)
+          console.error('Certbot provisioning failed:', certbotError.message)
+          // Try manual DNS challenge as last resort
+          console.log(`Note: DNS challenge may be required. Run manually: certbot certonly --manual -d ${customDomain} -d ${baseDomain}`)
+          throw new Error(`SSL certificate provisioning failed: ${certbotError.message}. Domain may need to point to server IP or DNS may need configuration.`)
         }
       }
     } catch (error: any) {
