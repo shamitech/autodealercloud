@@ -9,6 +9,30 @@ const mkdirAsync = promisify(fs.mkdir)
 
 export class NginxManager {
   private static NGINX_CONF_DIR = '/etc/nginx/conf.d'
+  
+  // Temporary HTTP-only config (used during cert provisioning)
+  private static TEMP_HTTP_TEMPLATE = `# Temporary HTTP-only Nginx Configuration for: {CUSTOM_DOMAIN}
+# Used for SSL certificate validation with certbot
+# Tenant ID: {TENANT_ID}
+# Generated: {TIMESTAMP}
+
+server {
+    listen 80;
+    server_name {CUSTOM_DOMAIN};
+    
+    # Allow certbot to validate via HTTP challenge
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+    
+    # Redirect other traffic to HTTPS once cert is ready
+    location / {
+        return 301 https://$server_name$request_uri;
+    }
+}
+`
+
+  // Full HTTPS config (used after cert is obtained)
   private static CUSTOM_DOMAIN_TEMPLATE = `# Nginx Configuration for Custom Domain: {CUSTOM_DOMAIN}
 # Tenant ID: {TENANT_ID}
 # Generated: {TIMESTAMP}
@@ -64,6 +88,55 @@ server {
       .replace(/{DOMAIN}/g, baseDomain)
       .replace(/{TENANT_ID}/g, tenantId)
       .replace(/{TIMESTAMP}/g, timestamp)
+  }
+
+  /**
+   * Generate temporary HTTP-only config for SSL certificate provisioning
+   */
+  static generateTempHttpConfig(
+    customDomain: string,
+    tenantId: string
+  ): string {
+    const timestamp = new Date().toISOString()
+    return this.TEMP_HTTP_TEMPLATE.replace(/{CUSTOM_DOMAIN}/g, customDomain)
+      .replace(/{TENANT_ID}/g, tenantId)
+      .replace(/{TIMESTAMP}/g, timestamp)
+  }
+
+  /**
+   * Deploy temporary HTTP-only config to enable certbot validation
+   */
+  static async deployTempHttpConfig(
+    customDomain: string,
+    tenantId: string
+  ): Promise<{ success: boolean; message?: string; error?: string; configPath?: string }> {
+    try {
+      const configContent = this.generateTempHttpConfig(customDomain, tenantId)
+      const configFileName = `custom-domain-${tenantId}-${customDomain.replace(/\./g, '-')}.conf`
+      const configPath = path.join(this.NGINX_CONF_DIR, configFileName)
+
+      console.log(`Deploying temporary HTTP config for ${customDomain}:\n${configContent}`)
+
+      // Write the config file
+      await writeFileAsync(configPath, configContent, 'utf8')
+      console.log(`Temporary config written to ${configPath}`)
+
+      // Reload Nginx
+      await execAsync('nginx -s reload')
+      console.log('Nginx reloaded with temporary config')
+
+      return {
+        success: true,
+        message: `Temporary HTTP config deployed for ${customDomain}. Ready for certificate validation.`,
+        configPath,
+      }
+    } catch (error: any) {
+      console.error('Failed to deploy temporary config:', error.message)
+      return {
+        success: false,
+        error: `Deployment failed: ${error.message}`,
+      }
+    }
   }
 
   /**

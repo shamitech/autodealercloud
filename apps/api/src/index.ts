@@ -786,12 +786,24 @@ app.post('/api/v1/custom-domains/:id/deploy', async (request: any) => {
     // Extract base domain (remove www. if present)
     const baseDomain = domain.domain.replace(/^www\./, '')
 
-    // IMPORTANT: Provision SSL certificate FIRST before deploying nginx config
-    // This ensures the certificate exists when nginx tries to load it
+    // STEP 1: Deploy temporary HTTP-only config for certbot validation
+    console.log(`Step 1: Deploying temporary HTTP config for ${domain.domain}...`)
+    const tempDeployResult = await NginxManager.deployTempHttpConfig(domain.domain, domain.tenantId)
+    if (!tempDeployResult.success) {
+      return { error: `Failed to deploy temporary config: ${tempDeployResult.error}` }
+    }
+
+    // STEP 2: Provision SSL certificate (now that nginx has a config for this domain)
+    console.log(`Step 2: Provisioning SSL certificate for ${domain.domain}...`)
     const certResult = await NginxManager.provisionSSLCertificate(domain.domain, baseDomain)
     console.log('SSL provisioning result:', certResult)
 
-    // Then deploy Nginx config (which references the now-provisioned certificates)
+    if (!certResult.success) {
+      return { error: `SSL provisioning failed: ${certResult.error}` }
+    }
+
+    // STEP 3: Deploy full HTTPS config (which references now-provisioned certificates)
+    console.log(`Step 3: Deploying full HTTPS config for ${domain.domain}...`)
     const deployResult = await NginxManager.deployConfig(domain.domain, baseDomain, domain.tenantId)
 
     if (!deployResult.success) {
