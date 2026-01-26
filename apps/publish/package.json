@@ -1,0 +1,22 @@
+{
+  "name": "@autodealercloud/publish",
+  "version": "1.0.0",
+  "description": "Publish service for tenant custom domains",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.0.0",
+    "fastify": "^4.24.0",
+    "@fastify/cors": "^8.4.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.0",
+    "ts-node": "^10.9.1",
+    "@types/node": "^20.3.0"
+  }
+}

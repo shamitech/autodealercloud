@@ -58,9 +58,9 @@ server {
     ssl_session_cache shared:SSL:10m;
     ssl_session_timeout 10m;
 
-    # Tenant publisher
+    # Tenant publisher (Next.js app on port 3000)
     location / {
-        proxy_pass http://localhost:3002;
+        proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -69,7 +69,7 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header X-Tenant-Domain {CUSTOM_DOMAIN};
-        proxy_set_header X-Env publish;
+        proxy_set_header X-Tenant-ID {TENANT_ID};
         proxy_cache_bypass $http_upgrade;
     }
 }
