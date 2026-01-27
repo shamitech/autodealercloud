@@ -283,7 +283,7 @@ app.get('/api/v1/tenants', async (request: any) => {
 app.put('/api/v1/tenants/:id', async (request: any) => {
   try {
     const { id } = request.params
-    const { name, description, status } = request.body
+    const { name, description, status, cmsSubdomain, publisherUrl } = request.body
 
     const tenant = await prisma.tenant.update({
       where: { id },
@@ -291,6 +291,8 @@ app.put('/api/v1/tenants/:id', async (request: any) => {
         ...(name && { name }),
         ...(description && { description }),
         ...(status && { status }),
+        ...(cmsSubdomain !== undefined && { cmsSubdomain: cmsSubdomain || null }),
+        ...(publisherUrl !== undefined && { publisherUrl: publisherUrl || null }),
       },
     })
 

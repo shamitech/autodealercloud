@@ -20,6 +20,8 @@ model Tenant {
   slug          String   @unique
   description   String?
   status        String   @default("active") // active, suspended, deleted
+  cmsSubdomain  String?  @unique // Custom subdomain for tenant CMS (e.g., mydealer)
+  publisherUrl  String?  // URL where published pages will appear
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { Tenant, tenantService } from '@/lib/tenant-service'
 
 export function TenantList() {
@@ -87,12 +88,20 @@ export function TenantList() {
                 {new Date(tenant.createdAt).toLocaleDateString()}
               </td>
               <td className="py-3 px-4">
-                <button 
-                  onClick={() => handleDelete(tenant.id)}
-                  className="text-red-400 hover:text-red-300 text-sm"
-                >
-                  Delete
-                </button>
+                <div className="flex gap-3">
+                  <Link 
+                    href={`/tenants/${tenant.id}/settings`}
+                    className="text-blue-400 hover:text-blue-300 text-sm"
+                  >
+                    Configure CMS
+                  </Link>
+                  <button 
+                    onClick={() => handleDelete(tenant.id)}
+                    className="text-red-400 hover:text-red-300 text-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
               </td>
             </tr>
           ))}
