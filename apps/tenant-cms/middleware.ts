@@ -4,6 +4,14 @@ export async function middleware(request: NextRequest) {
   const customDomain = request.headers.get('x-tenant-domain')
   const tenantId = request.headers.get('x-tenant-id')
   const host = request.headers.get('host') || ''
+  
+  // Debug: log all headers
+  console.log('[Middleware DEBUG] Headers:', {
+    host,
+    'x-forwarded-host': request.headers.get('x-forwarded-host'),
+    'x-forwarded-proto': request.headers.get('x-forwarded-proto'),
+    'x-real-ip': request.headers.get('x-real-ip'),
+  })
 
   console.log('[Middleware] Host:', host, 'CustomDomain:', customDomain, 'TenantId:', tenantId)
 
