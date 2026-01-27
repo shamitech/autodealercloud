@@ -260,7 +260,7 @@ app.get('/api/v1/tenants', async (request: any) => {
   try {
     const { skip = 0, take = 10, cmsSubdomain } = request.query
 
-    const where = cmsSubdomain ? { cmsSubdomain } : {}
+    const where: any = cmsSubdomain ? { cmsSubdomain } : {}
 
     const tenants = await prisma.tenant.findMany({
       where,
