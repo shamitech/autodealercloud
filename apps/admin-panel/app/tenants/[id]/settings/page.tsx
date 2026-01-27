@@ -163,6 +163,27 @@ export default function TenantSettingsPage() {
             </div>
           </div>
 
+          {/* Initial Access Password */}
+          {tenant.tempPassword && (
+            <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
+              <h2 className="text-2xl font-bold mb-4">Initial Access Password</h2>
+              <div className="space-y-4">
+                <div className="bg-gray-700 rounded px-4 py-3 flex items-center justify-between">
+                  <span className="font-mono text-white">{tenant.tempPassword}</span>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(tenant.tempPassword)}
+                    className="ml-4 bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm font-medium transition"
+                  >
+                    Copy
+                  </button>
+                </div>
+                <p className="text-sm text-gray-400">
+                  Share this temporary password with the tenant to log in for the first time.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* API Configuration Info */}
           <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
             <h2 className="text-2xl font-bold mb-4">API Configuration</h2>
