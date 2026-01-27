@@ -31,10 +31,14 @@ export default function PublishedView() {
     const fetchPage = async () => {
       try {
         setLoading(true)
-        // Query the API to get the published page
-        // Use a relative path so it works from any domain
+        // Determine API base URL
+        const apiUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+          ? 'http://localhost:3004/api/v1'
+          : 'https://api.autodealercloud.com/api/v1'
+        
+        // Fetch all pages for this tenant and find the one matching the slug
         const response = await fetch(
-          `${window.location.protocol}//${window.location.host === 'localhost:3000' ? 'localhost:3004' : 'api.autodealercloud.com/api/v1'}/pages?tenantId=${tenantId}&slug=${slug}&status=published`,
+          `${apiUrl}/tenants/${tenantId}/pages?status=published`,
           {
             headers: {
               'Content-Type': 'application/json',
@@ -43,15 +47,20 @@ export default function PublishedView() {
         )
 
         if (!response.ok) {
-          throw new Error(`Failed to fetch page: ${response.statusText}`)
+          throw new Error(`Failed to fetch pages: ${response.statusText}`)
         }
 
         const data = await response.json()
         
-        if (data.success && data.data && data.data.length > 0) {
-          setPage(data.data[0])
+        // Find page matching the slug
+        let matchedPage = null
+        if (data.success && data.data && Array.isArray(data.data)) {
+          matchedPage = data.data.find((p: any) => p.slug === slug)
+        }
+        
+        if (matchedPage) {
+          setPage(matchedPage)
         } else if (slug !== 'home') {
-          // Try to fetch home page if requested page not found
           setError('Page not found')
         } else {
           setError('No published content yet')
