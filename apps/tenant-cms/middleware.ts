@@ -44,11 +44,20 @@ export async function middleware(request: NextRequest) {
           requestHeaders.set('x-tenant-subdomain', subdomain)
           requestHeaders.set('x-tenant-id', tenant.id)
           
-          return NextResponse.next({
+          const response = NextResponse.next({
             request: {
               headers: requestHeaders,
             },
           })
+          
+          // Prevent caching for login pages
+          if (request.nextUrl.pathname === '/login') {
+            response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+            response.headers.set('Pragma', 'no-cache')
+            response.headers.set('Expires', '0')
+          }
+          
+          return response
         } else {
           console.log('[Middleware] No tenant found for subdomain:', subdomain)
         }
@@ -56,6 +65,15 @@ export async function middleware(request: NextRequest) {
     } catch (error) {
       console.error('[Middleware] Error fetching tenant:', error)
     }
+  }
+
+  // Prevent caching for login pages
+  if (request.nextUrl.pathname === '/login') {
+    const response = NextResponse.next()
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
+    return response
   }
 
   // Default: show CMS editor
