@@ -22,6 +22,7 @@ model Tenant {
   status        String   @default("active") // active, suspended, deleted
   cmsSubdomain  String?  @unique // Custom subdomain for tenant CMS (e.g., mydealer)
   publisherUrl  String?  // URL where published pages will appear
+  tempPassword  String?  // Temporary password for initial tenant login
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
