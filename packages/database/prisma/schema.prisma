@@ -33,6 +33,10 @@ model Tenant {
   analytics     AnalyticsEvent[]
   domains       CustomDomain[]
   content       Content[]
+  customComponents TenantCustomComponent[] @relation("tenantCustomComponents")
+  jsFunctions   JavaScriptFunction[] @relation("tenantJsFunctions")
+  componentStyles TenantComponentStyle[] @relation("tenantComponentStyles")
+  versionNotifications VersionNotification[] @relation("versionNotifications")
 
   @@index([status])
   @@index([createdAt])
@@ -52,6 +56,7 @@ model User {
   // Relations
   tenantId      String?
   tenant        Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  previewAccess PreviewAccess[]
 
   @@index([tenantId])
   @@index([role])
@@ -105,9 +110,8 @@ model CustomDomain {
   @@index([dnsVerified])
 }
 
-// ============================================
-// Component Models
-// ============================================
+// Old component models retained for backward compatibility
+// New component system uses ComponentDefinition instead
 
 model Component {
   id          String   @id @default(cuid())
@@ -182,29 +186,195 @@ model CustomComponent {
 }
 
 // ============================================
-// Page & Template Models
+// Component Definition Models (Core Components)
+// ============================================
+
+model ComponentDefinition {
+  id          String   @id @default(cuid())
+  type        String   // atom, molecule, organism
+  name        String   // e.g., "Button", "Card", "Header"
+  slug        String   @unique
+  description String?
+  category    String?  // visual, form, content, layout, navigation, etc.
+  propSchema  Json     @default("{}") // Schema for component props
+  defaultCss  String?  // Default CSS classes
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  versions    ComponentDefinitionVersion[]
+  usedInComponents ComponentCompositionDefinition[] @relation("parentDefinition")
+  usesComponents   ComponentCompositionDefinition[] @relation("childDefinition")
+  styles      ComponentStyle[]
+  templates   JavaScriptFunctionTemplate[]
+  versionHistory ComponentVersionHistory[]
+
+  @@index([type])
+  @@index([category])
+}
+
+model ComponentDefinitionVersion {
+  id          String   @id @default(cuid())
+  version     String   // semver: 1.0.0
+  htmlContent String?  // HTML template
+  cssContent  String?  // CSS content
+  jsHooks     Json     @default("[]") // Available JS hook points
+  releaseNotes String?
+  status      String   @default("published") // published, draft
+  createdAt   DateTime @default(now())
+
+  componentId String
+  component   ComponentDefinition @relation(fields: [componentId], references: [id], onDelete: Cascade)
+
+  @@unique([componentId, version])
+  @@index([componentId])
+}
+
+model ComponentCompositionDefinition {
+  id        String   @id @default(cuid())
+  order     Int      // Order in parent component
+  createdAt DateTime @default(now())
+
+  parentComponentId String
+  parentComponent   ComponentDefinition @relation("parentDefinition", fields: [parentComponentId], references: [id], onDelete: Cascade)
+
+  childComponentId String
+  childComponent   ComponentDefinition @relation("childDefinition", fields: [childComponentId], references: [id], onDelete: Cascade)
+
+  @@unique([parentComponentId, childComponentId])
+  @@index([parentComponentId])
+}
+
+// ============================================
+// Component Style Model
+// ============================================
+
+model ComponentStyle {
+  id          String   @id @default(cuid())
+  name        String   // e.g., "Primary Button", "Large Card"
+  cssContent  String?  // Raw CSS
+  visualStyle Json     @default("{}") // Visual editor settings (colors, spacing, etc.)
+  appliedClasses String? // CSS classes to apply
+  mode        String   @default("visual") // visual, text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  componentId String
+  component   ComponentDefinition @relation(fields: [componentId], references: [id], onDelete: Cascade)
+
+  @@index([componentId])
+}
+
+model TenantComponentStyle {
+  id          String   @id @default(cuid())
+  name        String
+  cssContent  String?
+  visualStyle Json     @default("{}")
+  appliedClasses String?
+  mode        String   @default("visual")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenantId    String
+  tenant      Tenant   @relation("tenantComponentStyles", fields: [tenantId], references: [id], onDelete: Cascade)
+
+  customComponentId String?
+  customComponent   TenantCustomComponent? @relation(fields: [customComponentId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([customComponentId])
+}
+
+// ============================================
+// JavaScript Function Templates
+// ============================================
+
+model JavaScriptFunctionTemplate {
+  id          String   @id @default(cuid())
+  name        String   // e.g., "Scroll to Section", "Send Email"
+  description String?
+  functionBody String  // JS code with {{ placeholders }}
+  placeholders Json     @default("[]") // [{ name: "sectionId", type: "string", required: true }]
+  eventTypes  String   // comma-separated: click, load, scroll, hover, change, submit
+  selector    String?  // CSS selector hint
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  componentId String?
+  component   ComponentDefinition? @relation(fields: [componentId], references: [id], onDelete: SetNull)
+
+  instances   JavaScriptFunction[]
+
+  @@index([componentId])
+}
+
+model JavaScriptFunction {
+  id          String   @id @default(cuid())
+  name        String
+  eventType   String   // click, load, scroll, hover, change, submit
+  selector    String?  // CSS selector for the element
+  params      Json     @default("{}") // {{ placeholder }} values filled in by tenant
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  templateId  String?
+  template    JavaScriptFunctionTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  pageId      String?
+  page        PageVersion? @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  tenantId    String
+  tenant      Tenant   @relation("tenantJsFunctions", fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([templateId])
+  @@index([pageId])
+  @@index([tenantId])
+}
+
+// ============================================
+// Page & Template Models (Enhanced)
 // ============================================
 
 model Page {
   id          String   @id @default(cuid())
-  title       String
   slug        String
+  title       String   @default("")
   description String?
-  status      String   @default("draft") // draft, published
-  content     Json     @default("{}") // JSON structure of components and content
   metadata    Json     @default("{}") // SEO, og tags, etc.
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  publishedAt DateTime?
 
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
+  versions    PageVersion[]
+  templates   Template[]
+  pageTemplate PageTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
   templateId  String?
-  template    PageTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
 
   @@unique([tenantId, slug])
   @@index([tenantId])
+}
+
+model PageVersion {
+  id          String   @id @default(cuid())
+  versionNumber Int
+  versionName String   @default("") // e.g., "Landing Page v1.2"
+  content     Json     @default("{}") // Component tree structure
+  status      String   @default("draft") // draft, preview, published
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  publishedAt DateTime?
+
+  pageId      String
+  page        Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  jsFunctions JavaScriptFunction[]
+  previewAccess PreviewAccess[]
+
+  @@unique([pageId, versionNumber])
+  @@index([pageId])
   @@index([status])
 }
 
@@ -225,6 +395,134 @@ model PageTemplate {
 
   @@unique([tenantId, slug])
   @@index([tenantId])
+}
+
+// ============================================
+// Template with Zones Model
+// ============================================
+
+model Template {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String
+  description String?
+  zones       Zone[]   // Template areas with restrictions
+  previewHtml String?  // HTML for template preview
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  pageId      String
+  page        Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@index([pageId])
+}
+
+model Zone {
+  id          String   @id @default(cuid())
+  name        String   // e.g., "Hero", "Content", "Footer"
+  componentRestrictions Json @default("[]") // Array of allowed component slugs (empty = allow all)
+  content     Json     @default("{}") // Zone content
+  order       Int      // Order in template
+
+  templateId  String
+  template    Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([templateId])
+}
+
+// ============================================
+// Preview Access Model
+// ============================================
+
+model PreviewAccess {
+  id          String   @id @default(cuid())
+  permission  String   @default("view") // view, edit
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime?
+
+  pageVersionId String
+  pageVersion   PageVersion @relation(fields: [pageVersionId], references: [id], onDelete: Cascade)
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([pageVersionId, userId])
+  @@index([pageVersionId])
+  @@index([userId])
+}
+
+// ============================================
+// Component Version History & Notifications
+// ============================================
+
+model ComponentVersionHistory {
+  id          String   @id @default(cuid())
+  oldVersion  String
+  newVersion  String
+  changes     Json     @default("{}") // What changed: { breaking: [], added: [], modified: [] }
+  releaseNotes String?
+  createdAt   DateTime @default(now())
+
+  componentId String
+  component   ComponentDefinition @relation(fields: [componentId], references: [id], onDelete: Cascade)
+
+  notifications VersionNotification[]
+
+  @@index([componentId])
+}
+
+model VersionNotification {
+  id          String   @id @default(cuid())
+  message     String
+  acknowledged Boolean @default(false)
+  actionTaken String?  // "updated", "ignored", "rolled_back"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  historyId   String
+  history     ComponentVersionHistory @relation(fields: [historyId], references: [id], onDelete: Cascade)
+
+  tenantId    String
+  tenant      Tenant   @relation("versionNotifications", fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([historyId])
+  @@index([tenantId])
+  @@index([acknowledged])
+}
+
+// ============================================
+// Tenant Custom Component Model
+// ============================================
+
+model TenantCustomComponent {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String
+  description String?
+  composition Json     @default("{}") // Structure: how it composes core/other components
+  metadata    Json     @default("{}")
+  versions    TenantComponentVersion[]
+  styles      TenantComponentStyle[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenantId    String
+  tenant      Tenant   @relation("tenantCustomComponents", fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+}
+
+model TenantComponentVersion {
+  id          String   @id @default(cuid())
+  version     String   // semver
+  composition Json     @default("{}")
+  createdAt   DateTime @default(now())
+
+  componentId String
+  component   TenantCustomComponent @relation(fields: [componentId], references: [id], onDelete: Cascade)
+
+  @@unique([componentId, version])
 }
 
 // ============================================

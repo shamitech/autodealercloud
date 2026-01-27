@@ -538,7 +538,7 @@ app.get('/api/v1/tenants/:tenantId/pages', async (request: any) => {
 app.post('/api/v1/tenants/:tenantId/pages', { preHandler: authenticate }, async (request: any) => {
   try {
     const { tenantId } = request.params
-    const { title, slug, description, content, metadata, templateId } = request.body
+    const { title, slug, description, metadata, templateId } = request.body
 
     if (!title || !slug) {
       return { error: 'Title and slug are required' }
@@ -549,7 +549,6 @@ app.post('/api/v1/tenants/:tenantId/pages', { preHandler: authenticate }, async 
         title,
         slug,
         description,
-        content: content || {},
         metadata: metadata || {},
         templateId,
         tenantId,
@@ -571,7 +570,7 @@ app.get('/api/v1/pages/:pageId', async (request: any) => {
       where: { id: pageId },
       include: {
         tenant: { select: { id: true, name: true } },
-        template: true,
+        templates: true,
       },
     })
 
@@ -589,16 +588,14 @@ app.get('/api/v1/pages/:pageId', async (request: any) => {
 app.put('/api/v1/pages/:pageId', { preHandler: authenticate }, async (request: any) => {
   try {
     const { pageId } = request.params
-    const { title, description, content, metadata, status, templateId } = request.body
+    const { title, description, metadata, templateId } = request.body
 
     const page = await prisma.page.update({
       where: { id: pageId },
       data: {
         ...(title && { title }),
         ...(description && { description }),
-        ...(content && { content }),
         ...(metadata && { metadata }),
-        ...(status && { status }),
         ...(templateId && { templateId }),
       },
     })
@@ -609,20 +606,21 @@ app.put('/api/v1/pages/:pageId', { preHandler: authenticate }, async (request: a
   }
 })
 
-// Publish page (protected)
+// Publish page (protected) - creates published page version
 app.post('/api/v1/pages/:pageId/publish', { preHandler: authenticate }, async (request: any) => {
   try {
     const { pageId } = request.params
 
-    const page = await prisma.page.update({
+    const page = await prisma.page.findUnique({
       where: { id: pageId },
-      data: {
-        status: 'published',
-        publishedAt: new Date(),
-      },
     })
 
-    return { success: true, data: page, message: 'Page published' }
+    if (!page) {
+      return { error: 'Page not found' }
+    }
+
+    // Publishing is done via PageVersion status update, not page update
+    return { success: true, message: 'Use PUT /api/v1/page-versions/:versionId endpoint to publish a version' }
   } catch (error: any) {
     return { error: error.message }
   }
@@ -1179,6 +1177,97 @@ app.get('/api/v1/users', async (request: any) => {
     })
 
     return { success: true, data: users, total }
+  } catch (error: any) {
+    return { error: error.message }
+  }
+})
+
+// ============================================
+// Component Definition Routes (Admin Core Components)
+// ============================================
+
+// Create core component definition
+app.post('/api/v1/components/definitions', { preHandler: authenticate }, async (request: any) => {
+  try {
+    const { type, name, slug, description, category } = request.body
+
+    if (!type || !name || !slug) {
+      return { error: 'Type, name, and slug are required' }
+    }
+
+    const component = await prisma.component.create({
+      data: {
+        type,
+        name,
+        slug,
+        description,
+        category,
+      },
+    })
+
+    return { success: true, data: component }
+  } catch (error: any) {
+    return { error: error.message }
+  }
+})
+
+// List all core component definitions
+app.get('/api/v1/components/definitions', async (request: any) => {
+  try {
+    const { type, category, skip = 0, take = 20 } = request.query
+
+    const components = await prisma.component.findMany({
+      where: {
+        ...(type && { type }),
+        ...(category && { category }),
+      },
+      skip: parseInt(skip),
+      take: parseInt(take),
+    })
+
+    const total = await prisma.component.count()
+
+    return { success: true, data: components, total }
+  } catch (error: any) {
+    return { error: error.message }
+  }
+})
+
+// Get component definition by ID
+app.get('/api/v1/components/definitions/:id', async (request: any) => {
+  try {
+    const { id } = request.params
+
+    const component = await prisma.component.findUnique({
+      where: { id },
+    })
+
+    if (!component) {
+      return { error: 'Component not found' }
+    }
+
+    return { success: true, data: component }
+  } catch (error: any) {
+    return { error: error.message }
+  }
+})
+
+// Update component definition
+app.put('/api/v1/components/definitions/:id', { preHandler: authenticate }, async (request: any) => {
+  try {
+    const { id } = request.params
+    const { name, description, category } = request.body
+
+    const component = await prisma.component.update({
+      where: { id },
+      data: {
+        ...(name && { name }),
+        ...(description && { description }),
+        ...(category && { category }),
+      },
+    })
+
+    return { success: true, data: component }
   } catch (error: any) {
     return { error: error.message }
   }
