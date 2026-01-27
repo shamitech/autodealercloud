@@ -1,8 +1,4 @@
-import { PrismaClient } from '@prisma/client'
-import bcrypt from 'bcryptjs'
 import { headers } from 'next/headers'
-
-const prisma = new PrismaClient()
 
 export async function GET() {
   return new Response('Not found', { status: 404 })
@@ -35,43 +31,50 @@ export async function POST(request: Request) {
       })
     }
 
-    // Find and verify user
-    const user = await prisma.user.findFirst({
-      where: {
-        email,
-        tenantId,
-      },
-    })
+    try {
+      // Call the backend API to authenticate
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.autodealercloud.com'
+      const authResponse = await fetch(`${apiUrl}/api/v1/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          tenantId,
+        }),
+      })
 
-    if (!user) {
+      if (!authResponse.ok) {
+        return new Response(null, {
+          status: 302,
+          headers: {
+            'Location': '/login?error=invalid',
+          },
+        })
+      }
+
+      const authData = await authResponse.json()
+
+      // Create session with auth token from API
+      const response = new Response(null, {
+        status: 302,
+        headers: {
+          'Location': '/',
+          'Set-Cookie': `auth=${authData.token}; Path=/; Secure; SameSite=Strict; Max-Age=86400`,
+        },
+      })
+      return response
+    } catch (apiError) {
+      console.error('API auth error:', apiError)
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': '/login?error=invalid',
+          'Location': '/login?error=server',
         },
       })
     }
-
-    // Verify password
-    const isValid = await bcrypt.compare(password, user.password)
-    if (!isValid) {
-      return new Response(null, {
-        status: 302,
-        headers: {
-          'Location': '/login?error=invalid',
-        },
-      })
-    }
-
-    // Create session
-    const response = new Response(null, {
-      status: 302,
-      headers: {
-        'Location': '/',
-        'Set-Cookie': `auth=${Buffer.from(email).toString('base64')}; Path=/; Secure; SameSite=Strict; Max-Age=86400`,
-      },
-    })
-    return response
   } catch (error: any) {
     console.error('Login error:', error)
     return new Response(null, {

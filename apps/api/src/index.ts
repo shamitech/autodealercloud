@@ -91,10 +91,14 @@ app.post('/api/v1/auth/register', async (request: any, reply: any) => {
 // Login
 app.post('/api/v1/auth/login', async (request: any, reply: any) => {
   try {
-    const { email, password } = request.body
+    const { email, password, tenantId } = request.body
 
-    const user = await AuthService.login(email, password)
-    const token = jwt.sign({ sub: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' })
+    const user = await AuthService.login(email, password, tenantId)
+    const token = jwt.sign(
+      { sub: user.id, email: user.email, tenantId: user.tenantId, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    )
 
     return { success: true, data: { user, token } }
   } catch (error: any) {

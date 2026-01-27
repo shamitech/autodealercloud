@@ -66,16 +66,28 @@ export class AuthService {
   }
 
   /**
-   * Login user
+   * Login user (supports both global and tenant-scoped login)
    */
-  static async login(email: string, password: string) {
+  static async login(email: string, password: string, tenantId?: string) {
     if (!email || !password) {
       throw new Error('Email and password required')
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email },
-    })
+    let user
+    if (tenantId) {
+      // Tenant-scoped login
+      user = await prisma.user.findFirst({
+        where: {
+          email,
+          tenantId,
+        },
+      })
+    } else {
+      // Global login (for admin panel)
+      user = await prisma.user.findUnique({
+        where: { email },
+      })
+    }
 
     if (!user) {
       throw new Error('Invalid email or password')

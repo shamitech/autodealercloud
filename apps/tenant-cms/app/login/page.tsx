@@ -1,10 +1,11 @@
-import { Metadata } from 'next'
+'use client'
 
-export const metadata: Metadata = {
-  title: 'Login - Tenant CMS',
-}
+import { Metadata } from 'next'
+import { useSearchParams } from 'next/navigation'
 
 export default function LoginPage() {
+  const searchParams = useSearchParams()
+  const error = searchParams.get('error')
   return (
     <>
       <style>{`
@@ -102,6 +103,15 @@ export default function LoginPage() {
         <h1>Tenant CMS</h1>
         <p className="subtitle">Sign in to your account</p>
         
+        {error && (
+          <div style={{ backgroundColor: '#fee', border: '1px solid #fcc', color: '#c33', padding: '12px', borderRadius: '5px', marginBottom: '20px', fontSize: '14px' }}>
+            {error === 'invalid' && 'Invalid email or password'}
+            {error === 'empty' && 'Please fill in all fields'}
+            {error === 'tenant' && 'Tenant not found'}
+            {error === 'server' && 'Server error. Please try again'}
+          </div>
+        )}
+        
         <form method="POST" action="/api/auth/login">
           <div className="form-group">
             <label htmlFor="email">Email Address</label>
@@ -129,7 +139,7 @@ export default function LoginPage() {
         </form>
         
         <div className="demo-notice">
-          <p><strong>Demo Mode:</strong> Use any email and password to test</p>
+          <p><strong>Demo Mode:</strong> Contact your admin for login credentials</p>
         </div>
       </div>
     </>
