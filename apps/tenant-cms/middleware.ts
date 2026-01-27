@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  // Get the X-Tenant-Domain header from nginx
   const customDomain = request.headers.get('x-tenant-domain')
   const tenantId = request.headers.get('x-tenant-id')
-  const host = request.headers.get('host')
+  const host = request.headers.get('host') || ''
+
+  console.log('[Middleware] Host:', host, 'CustomDomain:', customDomain, 'TenantId:', tenantId)
 
   // If request came through a custom domain (has X-Tenant-Domain header), route to published view
   if (customDomain && tenantId) {
-    // Rewrite to the published view which will fetch from the API
+    console.log('[Middleware] Custom domain detected, routing to published view')
     const url = request.nextUrl.clone()
-    url.pathname = `/published/${tenantId}${url.pathname}`
+    url.pathname = `/published/${tenantId}${url.pathname === '/' ? '' : url.pathname}`
+    console.log('[Middleware] Rewriting to:', url.pathname)
     return NextResponse.rewrite(url)
   }
 
@@ -19,5 +21,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 }
