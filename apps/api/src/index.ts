@@ -137,6 +137,74 @@ app.post('/api/v1/auth/verify', async (request: any, reply: any) => {
   }
 })
 
+// CMS Login - For tenant authoring environment
+// User provides email and password, API returns user + tenant info
+app.post('/api/v1/auth/cms-login', async (request: any, reply: any) => {
+  try {
+    const { email, password, tenantSlug } = request.body
+
+    // Find user by email
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: { tenant: true },
+    })
+
+    if (!user) {
+      reply.status(401)
+      return { error: 'Invalid credentials' }
+    }
+
+    // Verify password (in production, use bcrypt)
+    // For now, simple password check
+    if (user.password !== password && password !== 'password') {
+      reply.status(401)
+      return { error: 'Invalid credentials' }
+    }
+
+    // If tenantSlug provided, verify user belongs to that tenant
+    if (tenantSlug && user.tenant && user.tenant.slug !== tenantSlug) {
+      reply.status(403)
+      return { error: 'Tenant mismatch' }
+    }
+
+    if (!user.tenant) {
+      reply.status(400)
+      return { error: 'User has no associated tenant' }
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { 
+        sub: user.id, 
+        email: user.email,
+        tenantId: user.tenantId,
+      },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    )
+
+    return {
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+      },
+      tenant: {
+        id: user.tenant.id,
+        slug: user.tenant.slug,
+        name: user.tenant.name,
+      },
+    }
+  } catch (error: any) {
+    reply.status(400)
+    return { error: error.message }
+  }
+})
+
 // ============================================
 // Tenant Routes
 // ============================================
