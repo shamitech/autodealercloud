@@ -174,6 +174,19 @@ class DomainService {
     }
   }
 
+  async redeployCustomDomain(id: string): Promise<{ success: boolean; message?: string; error?: string }> {
+    try {
+      const response = await apiClient.post<any>(`/custom-domains/${id}/redeploy`, {})
+      if (response && response.data) {
+        return response.data
+      }
+      return response || { success: false, error: 'Unknown error' }
+    } catch (error) {
+      console.error('Error redeploying domain:', error)
+      return { success: false, error: error instanceof Error ? error.message : 'Redeployment failed' }
+    }
+  }
+
   async generateDnsRecord(id: string): Promise<{ success: boolean; dnsRecord?: string; dnsName?: string; error?: string }> {
     try {
       const response = await apiClient.post<any>(`/custom-domains/${id}/generate-dns`, {})

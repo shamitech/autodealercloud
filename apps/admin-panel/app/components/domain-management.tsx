@@ -105,6 +105,25 @@ export function DomainManagement() {
     }
   }
 
+  const handleRedeploy = async (id: string) => {
+    if (!confirm('Redeploy this domain? This will update the Nginx configuration without reprovisioning SSL.')) return
+    try {
+      setDeploying(true)
+      const result = await domainService.redeployCustomDomain(id)
+      if (result.success) {
+        setSelectedDomainId(null)
+        await loadData()
+        setError(null)
+      } else {
+        setError(result.error || 'Redeployment failed')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to redeploy domain')
+    } finally {
+      setDeploying(false)
+    }
+  }
+
   const handleVerifyDns = async (id: string) => {
     try {
       setVerifyingDns(id)
@@ -218,6 +237,15 @@ export function DomainManagement() {
                             className="text-blue-400 hover:text-blue-300 text-sm disabled:opacity-50"
                           >
                             {deploying && selectedDomainId === d.id ? 'Deploying...' : 'Deploy'}
+                          </button>
+                        )}
+                        {d && d.deployed && (
+                          <button
+                            onClick={() => handleRedeploy(d.id)}
+                            disabled={deploying}
+                            className="text-green-400 hover:text-green-300 text-sm disabled:opacity-50"
+                          >
+                            {deploying && selectedDomainId === d.id ? 'Redeploying...' : 'Redeploy'}
                           </button>
                         )}
                         {d && (
