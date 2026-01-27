@@ -52,11 +52,9 @@ async function renderPage(tenantId: string, slug: string) {
       where: {
         tenantId,
         slug,
-        status: 'published',
       },
       include: {
         tenant: true,
-        template: true,
       },
     })
 
@@ -112,9 +110,7 @@ app.get('/', async (request: any, reply: any) => {
         title: page.title,
         slug: page.slug,
         description: page.description,
-        content: page.content,
         metadata: page.metadata,
-        publishedAt: page.publishedAt,
       },
       tenant: {
         id: tenant.id,
@@ -168,9 +164,7 @@ app.get('/:slug', async (request: any, reply: any) => {
         title: page.title,
         slug: page.slug,
         description: page.description,
-        content: page.content,
         metadata: page.metadata,
-        publishedAt: page.publishedAt,
       },
       tenant: {
         id: tenant.id,
@@ -185,12 +179,12 @@ app.get('/:slug', async (request: any, reply: any) => {
 
 const PORT = process.env.PUBLISH_PORT || 3002
 
-try {
-  await app.listen({ port: Number(PORT), host: '0.0.0.0' })
-  console.log(`Publish service running on port ${PORT}`)
-} catch (err) {
-  app.log.error(err)
-  process.exit(1)
-}
+app.listen({ port: Number(PORT), host: '0.0.0.0' }, (err, address) => {
+  if (err) {
+    app.log.error(err)
+    process.exit(1)
+  }
+  console.log(`Publish service running on ${address}`)
+})
 
 export default app
