@@ -1,25 +1,21 @@
-'use client'
+import { Suspense } from 'react'
 
-import { Metadata } from 'next'
-import { useSearchParams } from 'next/navigation'
+export const dynamic = 'force-dynamic'
 
-export default function LoginPage() {
-  const searchParams = useSearchParams()
-  const error = searchParams.get('error')
+async function LoginForm() {
   return (
     <>
       <style>{`
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; }
         body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-          margin: 0;
-          padding: 0;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           min-height: 100vh;
           display: flex;
           align-items: center;
           justify-content: center;
         }
-        
         .login-container {
           background: white;
           border-radius: 10px;
@@ -28,25 +24,21 @@ export default function LoginPage() {
           max-width: 400px;
           padding: 40px;
         }
-        
         h1 {
           text-align: center;
           color: #333;
           margin: 0 0 10px 0;
           font-size: 28px;
         }
-        
         .subtitle {
           text-align: center;
           color: #666;
           margin: 0 0 30px 0;
           font-size: 14px;
         }
-        
         .form-group {
           margin-bottom: 20px;
         }
-        
         label {
           display: block;
           margin-bottom: 8px;
@@ -54,23 +46,18 @@ export default function LoginPage() {
           font-weight: 500;
           font-size: 14px;
         }
-        
         input {
           width: 100%;
           padding: 12px;
           border: 1px solid #ddd;
           border-radius: 5px;
           font-size: 14px;
-          box-sizing: border-box;
-          transition: border-color 0.3s;
         }
-        
         input:focus {
           outline: none;
           border-color: #667eea;
           box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
-        
         button {
           width: 100%;
           padding: 12px;
@@ -81,14 +68,9 @@ export default function LoginPage() {
           font-size: 16px;
           font-weight: 600;
           cursor: pointer;
-          transition: transform 0.2s;
           margin-top: 10px;
         }
-        
-        button:hover {
-          transform: translateY(-2px);
-        }
-        
+        button:hover { opacity: 0.9; }
         .demo-notice {
           text-align: center;
           color: #666;
@@ -98,19 +80,10 @@ export default function LoginPage() {
           border-top: 1px solid #eee;
         }
       `}</style>
-      
+
       <div className="login-container">
         <h1>Tenant CMS</h1>
         <p className="subtitle">Sign in to your account</p>
-        
-        {error && (
-          <div style={{ backgroundColor: '#fee', border: '1px solid #fcc', color: '#c33', padding: '12px', borderRadius: '5px', marginBottom: '20px', fontSize: '14px' }}>
-            {error === 'invalid' && 'Invalid email or password'}
-            {error === 'empty' && 'Please fill in all fields'}
-            {error === 'tenant' && 'Tenant not found'}
-            {error === 'server' && 'Server error. Please try again'}
-          </div>
-        )}
         
         <form method="POST" action="/api/auth/login">
           <div className="form-group">
@@ -139,10 +112,18 @@ export default function LoginPage() {
         </form>
         
         <div className="demo-notice">
-          <p><strong>Demo Mode:</strong> Contact your admin for login credentials</p>
+          <p><strong>Contact your admin for login credentials</strong></p>
         </div>
       </div>
     </>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   )
 }
 
