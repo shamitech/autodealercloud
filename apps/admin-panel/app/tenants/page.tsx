@@ -10,6 +10,9 @@ export default function TenantsPage() {
   const [refreshKey, setRefreshKey] = useState(0)
 
   const handleTenantCreated = (tenant: Tenant) => {
+    if (tenant.tempPassword) {
+      alert(`Tenant created successfully!\n\nTemporary Password: ${tenant.tempPassword}\n\nShare this with the tenant to log in.`)
+    }
     setShowForm(false)
     setRefreshKey(prev => prev + 1)
   }
