@@ -34,7 +34,8 @@ export async function middleware(request: NextRequest) {
       const response = await fetch(`${apiUrl}/api/v1/tenants?cmsSubdomain=${subdomain}`)
       
       if (response.ok) {
-        const tenants = await response.json()
+        const result = await response.json()
+        const tenants = result.data || result
         if (tenants && tenants.length > 0) {
           const tenant = tenants[0]
           console.log('[Middleware] Found tenant:', tenant.id, tenant.name)
