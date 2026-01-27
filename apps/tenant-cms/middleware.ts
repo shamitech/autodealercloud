@@ -5,13 +5,11 @@ export async function middleware(request: NextRequest) {
   const tenantId = request.headers.get('x-tenant-id')
   const host = request.headers.get('host') || ''
   
-  // Debug: log all headers
-  console.log('[Middleware DEBUG] Headers:', {
-    host,
-    'x-forwarded-host': request.headers.get('x-forwarded-host'),
-    'x-forwarded-proto': request.headers.get('x-forwarded-proto'),
-    'x-real-ip': request.headers.get('x-real-ip'),
-  })
+  // Debug: log all request info
+  console.error('[MW] URL:', request.url)
+  console.error('[MW] Host header:', host)
+  console.error('[MW] X-Forwarded-Host:', request.headers.get('x-forwarded-host'))
+  console.error('[MW] All headers:', Object.fromEntries(request.headers.entries()))
 
   console.log('[Middleware] Host:', host, 'CustomDomain:', customDomain, 'TenantId:', tenantId)
 
