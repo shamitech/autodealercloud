@@ -1,6 +1,7 @@
 'use client'
 
-import { Suspense } from 'react'
+export const dynamic = 'force-dynamic'
+
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 
@@ -105,9 +106,5 @@ function TenantCMSContent() {
 }
 
 export default function TenantCMS() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <TenantCMSContent />
-    </Suspense>
-  )
+  return <TenantCMSContent />
 }
