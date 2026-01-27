@@ -1,9 +1,21 @@
-import React from 'react'
+'use client'
 
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+import React, { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function TenantCMS() {
+  const router = useRouter()
+
+  useEffect(() => {
+    // Check if user is authenticated
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+    
+    if (!token) {
+      // Redirect to login if not authenticated
+      router.push('/login')
+    }
+  }, [router])
+
   return (
     <main style={{ padding: '40px', backgroundColor: '#f3f4f6', minHeight: '100vh' }}>
       <h1 style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '20px' }}>
