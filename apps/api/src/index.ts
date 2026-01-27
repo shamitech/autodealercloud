@@ -830,6 +830,43 @@ app.post('/api/v1/custom-domains/:id/deploy', async (request: any) => {
   }
 })
 
+// Redeploy custom domain (update nginx config without re-provisioning SSL)
+app.post('/api/v1/custom-domains/:id/redeploy', async (request: any) => {
+  try {
+    const { id } = request.params
+    const domain = await prisma.customDomain.findUnique({
+      where: { id },
+    })
+
+    if (!domain) {
+      return { error: 'Domain not found' }
+    }
+
+    if (!domain.deployed) {
+      return { error: 'Domain not deployed yet. Use /deploy endpoint first.' }
+    }
+
+    // Extract base domain (remove www. if present)
+    const baseDomain = domain.domain.replace(/^www\./, '')
+
+    // Just redeploy the full HTTPS config (SSL cert already exists)
+    console.log(`Redeploying nginx config for ${domain.domain}...`)
+    const deployResult = await NginxManager.deployConfig(domain.domain, baseDomain, domain.tenantId)
+
+    if (!deployResult.success) {
+      return { error: deployResult.error }
+    }
+
+    return {
+      success: true,
+      message: `Domain redeployed successfully. Nginx config updated.`,
+      configPath: deployResult.configPath,
+    }
+  } catch (error: any) {
+    return { error: error.message }
+  }
+})
+
 // Generate DNS verification record
 app.post('/api/v1/custom-domains/:id/generate-dns', async (request: any) => {
   try {
