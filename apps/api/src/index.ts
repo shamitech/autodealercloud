@@ -258,9 +258,12 @@ app.get('/api/v1/tenants/:id', async (request: any) => {
 // List all tenants
 app.get('/api/v1/tenants', async (request: any) => {
   try {
-    const { skip = 0, take = 10 } = request.query
+    const { skip = 0, take = 10, cmsSubdomain } = request.query
+
+    const where = cmsSubdomain ? { cmsSubdomain } : {}
 
     const tenants = await prisma.tenant.findMany({
+      where,
       skip: parseInt(skip),
       take: parseInt(take),
       include: {
@@ -271,7 +274,7 @@ app.get('/api/v1/tenants', async (request: any) => {
       },
     })
 
-    const total = await prisma.tenant.count()
+    const total = await prisma.tenant.count({ where })
 
     return { success: true, data: tenants, total }
   } catch (error: any) {
