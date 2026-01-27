@@ -285,6 +285,15 @@ app.put('/api/v1/tenants/:id', async (request: any) => {
     const { id } = request.params
     const { name, description, status, cmsSubdomain, publisherUrl } = request.body
 
+    // If cmsSubdomain is being set, create Nginx config
+    if (cmsSubdomain) {
+      const nginxResult = await NginxManager.createTenantCmsSubdomain(cmsSubdomain, id)
+      if (!nginxResult.success) {
+        console.error('Nginx config creation failed:', nginxResult.error)
+        // Don't fail the tenant update, just log the warning
+      }
+    }
+
     const tenant = await prisma.tenant.update({
       where: { id },
       data: {

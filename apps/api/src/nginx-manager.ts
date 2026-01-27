@@ -306,4 +306,112 @@ server {
       }
     }
   }
+
+  // Create Nginx config for tenant CMS subdomain
+  static async createTenantCmsSubdomain(
+    subdomain: string,
+    tenantId: string,
+    port: number = 3002 // tenant-cms port
+  ) {
+    try {
+      // Validate subdomain format
+      if (!subdomain.match(/^[a-z0-9-]+$/)) {
+        return {
+          success: false,
+          error: 'Subdomain must contain only lowercase letters, numbers, and hyphens',
+        }
+      }
+
+      const domain = `${subdomain}.autodealercloud.com`
+      const configFileName = `tenant-cms-${subdomain}.conf`
+      const configPath = path.join(this.NGINX_CONF_DIR, configFileName)
+
+      const template = `# Nginx Configuration for Tenant CMS: ${domain}
+# Tenant ID: ${tenantId}
+# Generated: ${new Date().toISOString()}
+
+server {
+    listen 80;
+    listen 443 ssl http2;
+    server_name ${domain};
+    ssl_certificate /etc/letsencrypt/live/autodealercloud.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/autodealercloud.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNuLl!MD5;
+    ssl_prefer_server_ciphers on;
+
+    if ($scheme != https) { return 301 https://$server_name$request_uri; }
+
+    location / {
+        proxy_pass http://localhost:${port};
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Tenant-ID ${tenantId};
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+`
+
+      // Write config file
+      await writeFileAsync(configPath, template)
+      console.log(`Created tenant CMS config: ${configPath}`)
+
+      // Test Nginx config syntax
+      await execAsync('nginx -t')
+
+      // Reload Nginx
+      await execAsync('nginx -s reload')
+      console.log('Nginx reloaded for tenant CMS subdomain')
+
+      return {
+        success: true,
+        message: `Tenant CMS subdomain created: ${domain}`,
+        domain,
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: `Failed to create tenant CMS subdomain: ${error.message}`,
+      }
+    }
+  }
+
+  // Remove Nginx config for tenant CMS subdomain
+  static async removeTenantCmsSubdomain(subdomain: string) {
+    try {
+      const configFileName = `tenant-cms-${subdomain}.conf`
+      const configPath = path.join(this.NGINX_CONF_DIR, configFileName)
+
+      // Check if file exists
+      if (!fs.existsSync(configPath)) {
+        return {
+          success: true,
+          message: `Config file not found (already removed or never created)`,
+        }
+      }
+
+      // Remove the file
+      fs.unlinkSync(configPath)
+      console.log(`Removed tenant CMS config: ${configPath}`)
+
+      // Reload Nginx
+      await execAsync('nginx -s reload')
+      console.log('Nginx reloaded after tenant CMS config removal')
+
+      return {
+        success: true,
+        message: `Tenant CMS subdomain configuration removed and Nginx reloaded`,
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: `Failed to remove tenant CMS subdomain: ${error.message}`,
+      }
+    }
+  }
 }
