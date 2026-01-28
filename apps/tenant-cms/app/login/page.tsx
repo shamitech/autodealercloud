@@ -1,6 +1,56 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+
 export default function LoginPage() {
+  const [slug, setSlug] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    // Extract slug from hostname (e.g., testsite3-auth.autodealercloud.com)
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname
+      const match = hostname.match(/^(.*?)-auth\./)
+      if (match) {
+        setSlug(match[1])
+      }
+    }
+  }, [])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, password }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || 'Login failed')
+        setLoading(false)
+        return
+      }
+
+      // Store session token and tenant ID in localStorage
+      localStorage.setItem('sessionToken', data.sessionToken)
+      localStorage.setItem('tenantId', data.tenantId)
+
+      // Redirect to CMS dashboard
+      window.location.href = `https://${slug}.autodealercloud.com/dashboard`
+    } catch (err: any) {
+      setError(err.message || 'An error occurred')
+      setLoading(false)
+    }
+  }
+
   return (
     <html>
       <head>
@@ -69,7 +119,8 @@ export default function LoginPage() {
             cursor: pointer;
             margin-top: 10px;
           }
-          button:hover { opacity: 0.9; }
+          button:hover:not(:disabled) { opacity: 0.9; }
+          button:disabled { opacity: 0.6; cursor: not-allowed; }
           .demo-notice {
             text-align: center;
             color: #666;
@@ -95,17 +146,23 @@ export default function LoginPage() {
         <div className="login-container">
           <h1>Tenant CMS</h1>
           <p className="subtitle">Sign in to your account</p>
-          <div id="error" className="error"></div>
-          <form action="/api/login" method="POST">
-            <div className="form-group">
-              <label htmlFor="email">Email Address</label>
-              <input type="email" id="email" name="email" placeholder="you@example.com" required />
-            </div>
+          {error && <div className="error show">{error}</div>}
+          <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label htmlFor="password">Password</label>
-              <input type="password" id="password" name="password" placeholder="••••••••" required />
+              <input 
+                type="password" 
+                id="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••" 
+                required 
+                disabled={loading}
+              />
             </div>
-            <button type="submit">Sign In</button>
+            <button type="submit" disabled={loading || !slug}>
+              {loading ? 'Signing in...' : 'Sign In'}
+            </button>
           </form>
           <div className="demo-notice">
             <p><strong>Contact your admin for login credentials</strong></p>
