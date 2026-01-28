@@ -17,13 +17,8 @@ export async function POST(request: NextRequest) {
       const json = await request.json();
       username = json.username;
       password = json.password;
-    } else if (contentType.includes('application/x-www-form-urlencoded')) {
-      // Handle form data
-      const formData = await request.formData();
-      username = formData.get('username') as string;
-      password = formData.get('password') as string;
     } else {
-      // Try form data as default
+      // Handle form data
       const formData = await request.formData();
       username = formData.get('username') as string;
       password = formData.get('password') as string;
