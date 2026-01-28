@@ -9,7 +9,14 @@ let prismaClient: any = null
 async function getPrismaClient() {
   if (!prismaClient) {
     const { PrismaClient } = require('@prisma/client')
-    prismaClient = new PrismaClient()
+    // For Prisma v7, pass the DATABASE_URL to PrismaClient constructor
+    prismaClient = new PrismaClient({
+      datasources: {
+        db: {
+          url: process.env.DATABASE_URL,
+        },
+      },
+    })
   }
   return prismaClient
 }
