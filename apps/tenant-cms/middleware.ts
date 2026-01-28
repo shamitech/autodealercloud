@@ -3,12 +3,19 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function middleware(request: NextRequest) {
   const host = request.headers.get('host') || ''
   const hostname = host.split(':')[0]
+  const pathname = request.nextUrl.pathname
 
-  console.log('[Middleware] Host:', hostname)
+  console.log('[Middleware] Host:', hostname, 'Path:', pathname)
 
   // Check for auth subdomain (e.g., testsite3-auth.autodealercloud.com)
   if (hostname.includes('-auth.autodealercloud.com')) {
-    console.log('[Middleware] Auth subdomain detected, allowing login page')
+    console.log('[Middleware] Auth subdomain detected, routing to /login')
+    // Rewrite to /login page
+    if (pathname === '/' || pathname === '') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      return NextResponse.rewrite(url)
+    }
     return NextResponse.next()
   }
 
