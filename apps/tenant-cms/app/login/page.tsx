@@ -1,8 +1,41 @@
-import { Suspense } from 'react'
+'use client'
 
-export const dynamic = 'force-dynamic'
+import { useState } from 'react'
 
-async function LoginForm() {
+export default function LoginPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.token) {
+        localStorage.setItem('token', data.token)
+        window.location.href = '/'
+      } else {
+        setError(data.error || 'Login failed')
+      }
+    } catch (err) {
+      setError('An error occurred during login')
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <>
       <style>{`
@@ -71,6 +104,7 @@ async function LoginForm() {
           margin-top: 10px;
         }
         button:hover { opacity: 0.9; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
         .demo-notice {
           text-align: center;
           color: #666;
@@ -79,19 +113,31 @@ async function LoginForm() {
           padding-top: 20px;
           border-top: 1px solid #eee;
         }
+        .error {
+          background-color: #fee;
+          color: #c33;
+          padding: 12px;
+          border-radius: 5px;
+          margin-bottom: 20px;
+          border: 1px solid #fcc;
+          font-size: 14px;
+        }
       `}</style>
 
       <div className="login-container">
         <h1>Tenant CMS</h1>
         <p className="subtitle">Sign in to your account</p>
         
-        <form method="POST" action="/api/auth/login">
+        {error && <div className="error">{error}</div>}
+        
+        <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="email">Email Address</label>
             <input 
               type="email" 
               id="email"
-              name="email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               required 
             />
@@ -102,13 +148,16 @@ async function LoginForm() {
             <input 
               type="password" 
               id="password"
-              name="password" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required 
             />
           </div>
           
-          <button type="submit">Sign In</button>
+          <button type="submit" disabled={loading}>
+            {loading ? 'Signing in...' : 'Sign In'}
+          </button>
         </form>
         
         <div className="demo-notice">
@@ -116,14 +165,6 @@ async function LoginForm() {
         </div>
       </div>
     </>
-  )
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense>
-      <LoginForm />
-    </Suspense>
   )
 }
 

@@ -1,20 +1,32 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function TenantCMS() {
   const router = useRouter()
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
 
   useEffect(() => {
     // Check if user is authenticated
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+    const token = localStorage.getItem('token')
     
     if (!token) {
       // Redirect to login if not authenticated
       router.push('/login')
+    } else {
+      setIsAuthenticated(true)
     }
   }, [router])
+
+  // Show nothing while checking auth or redirecting
+  if (isAuthenticated === null) {
+    return null
+  }
+
+  if (!isAuthenticated) {
+    return null
+  }
 
   return (
     <main style={{ padding: '40px', backgroundColor: '#f3f4f6', minHeight: '100vh' }}>
