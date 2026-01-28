@@ -8,7 +8,7 @@ RUN npm install
 
 COPY . .
 
-RUN npm run build
+RUN npm run build && npx prisma generate
 
 EXPOSE 3001
 
