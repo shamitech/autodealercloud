@@ -6,13 +6,20 @@ COPY api/package*.json ./
 
 RUN npm install
 
-COPY api . 
+COPY api .
 
 # Copy Prisma schema from shared packages directory
 COPY packages/database/prisma ./prisma
 
-RUN npm run build && npx prisma generate
+# Build TypeScript
+RUN npm run build
+
+# Set dummy DATABASE_URL for Prisma client generation at runtime
+ENV DATABASE_URL="postgresql://admin:postgres@localhost:5432/dummy"
+
+# Pre-generate Prisma client
+RUN npx prisma generate
 
 EXPOSE 3001
 
-CMD ["npm", "start"]
+CMD ["node", "dist/index.js"]
