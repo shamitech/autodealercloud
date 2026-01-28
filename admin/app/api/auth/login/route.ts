@@ -37,7 +37,10 @@ export async function POST(request: NextRequest) {
     console.log('Available credentials:', adminCreds);
     
     const user = Object.values(adminCreds).find(
-      (u) => u.username === username && u.password === password
+      (u) => {
+        console.log(`Comparing: u.username="${u.username}" === username="${username}" && u.password="${u.password}" === password="${password}"`);
+        return u.username === username && u.password === password;
+      }
     );
 
     if (!user) {
@@ -47,6 +50,8 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
+
+    console.log('User found, creating session');
 
     // Create session
     const cookieStore = await cookies();
