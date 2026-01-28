@@ -12,7 +12,5 @@ export async function POST(request: NextRequest) {
 
   session.destroy();
 
-  return NextResponse.redirect(new URL('/', request.url), {
-    status: 302,
-  });
+  return NextResponse.json({ success: true }, { status: 200 });
 }

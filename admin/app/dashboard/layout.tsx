@@ -1,6 +1,7 @@
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import LogoutButton from './LogoutButton';
 
 export default async function DashboardLayout({
   children,
@@ -40,14 +41,7 @@ export default async function DashboardLayout({
           </Link>
         </nav>
         <div className="absolute bottom-0 w-64 border-t border-gray-700 p-4">
-          <form action="/api/auth/logout" method="POST">
-            <button
-              type="submit"
-              className="w-full rounded bg-red-600 px-4 py-2 hover:bg-red-700"
-            >
-              Logout
-            </button>
-          </form>
+          <LogoutButton />
         </div>
       </aside>
 
