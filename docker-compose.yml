@@ -20,8 +20,8 @@ services:
 
   api:
     build:
-      context: ./api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: api/Dockerfile
     container_name: autodealercloud-api
     ports:
       - "3001:3001"
@@ -34,8 +34,8 @@ services:
 
   admin-frontend:
     build:
-      context: ./admin-frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: admin-frontend/Dockerfile
     container_name: autodealercloud-admin
     ports:
       - "3000:3000"
