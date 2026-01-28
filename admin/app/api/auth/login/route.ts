@@ -5,9 +5,28 @@ import { sessionOptions, SessionData } from '@/lib/session';
 
 export async function POST(request: NextRequest) {
   try {
-    const formData = await request.formData();
-    const username = formData.get('username') as string;
-    const password = formData.get('password') as string;
+    // Get content type to determine how to parse the request
+    const contentType = request.headers.get('content-type') || '';
+    
+    let username: string | null = null;
+    let password: string | null = null;
+
+    if (contentType.includes('application/x-www-form-urlencoded')) {
+      // Handle form data
+      const formData = await request.formData();
+      username = formData.get('username') as string;
+      password = formData.get('password') as string;
+    } else if (contentType.includes('application/json')) {
+      // Handle JSON data
+      const json = await request.json();
+      username = json.username;
+      password = json.password;
+    } else {
+      // Try form data as default
+      const formData = await request.formData();
+      username = formData.get('username') as string;
+      password = formData.get('password') as string;
+    }
 
     if (!username || !password) {
       return NextResponse.json(
