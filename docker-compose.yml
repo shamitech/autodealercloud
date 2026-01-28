@@ -27,13 +27,10 @@ services:
       - "3001:3001"
     environment:
       DATABASE_URL: postgresql://admin:postgres@postgres:5432/autodealercloud
-      NODE_ENV: development
+      NODE_ENV: production
     depends_on:
       postgres:
         condition: service_healthy
-    volumes:
-      - ./api:/app
-      - /app/node_modules
 
   admin-frontend:
     build:
@@ -46,9 +43,6 @@ services:
       NEXT_PUBLIC_API_URL: http://localhost:3001
     depends_on:
       - api
-    volumes:
-      - ./admin-frontend:/app
-      - /app/node_modules
 
 volumes:
   postgres_data:
