@@ -58,7 +58,7 @@ export default async function Home() {
           </form>
 
           <p className="mt-4 text-center text-sm text-gray-600">
-            For testing: use any username and password
+            Demo credentials: admin / admin123
           </p>
         </div>
       </div>
