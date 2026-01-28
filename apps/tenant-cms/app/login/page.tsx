@@ -11,9 +11,18 @@ export default function LoginPage() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const hostname = window.location.hostname
-      const match = hostname.match(/^(.*?)-auth\./)
-      if (match) {
-        setSlug(match[1])
+      console.log('[Login] Hostname:', hostname)
+      
+      // Extract slug from hostname (e.g., testaccount-auth.autodealercloud.com -> testaccount)
+      const match = hostname.match(/^([^-]+)-auth\./)
+      console.log('[Login] Regex match:', match)
+      
+      if (match && match[1]) {
+        const extractedSlug = match[1]
+        console.log('[Login] Setting slug to:', extractedSlug)
+        setSlug(extractedSlug)
+      } else {
+        console.log('[Login] Failed to extract slug')
       }
     }
   }, [])
@@ -102,6 +111,7 @@ export default function LoginPage() {
             <input
               id="password"
               type="password"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter password"
