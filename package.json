@@ -1,0 +1,16 @@
+{
+  "name": "autodealercloud",
+  "version": "1.0.0",
+  "description": "Multi-tenant SaaS Admin Console",
+  "scripts": {
+    "dev": "docker-compose up",
+    "build": "docker-compose build",
+    "down": "docker-compose down",
+    "restart": "docker-compose restart"
+  },
+  "workspaces": [
+    "admin-frontend",
+    "api",
+    "packages/database"
+  ]
+}
