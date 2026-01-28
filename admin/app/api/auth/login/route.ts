@@ -12,16 +12,16 @@ export async function POST(request: NextRequest) {
     let username: string | null = null;
     let password: string | null = null;
 
-    if (contentType.includes('application/x-www-form-urlencoded')) {
-      // Handle form data
-      const formData = await request.formData();
-      username = formData.get('username') as string;
-      password = formData.get('password') as string;
-    } else if (contentType.includes('application/json')) {
+    if (contentType.includes('application/json')) {
       // Handle JSON data
       const json = await request.json();
       username = json.username;
       password = json.password;
+    } else if (contentType.includes('application/x-www-form-urlencoded')) {
+      // Handle form data
+      const formData = await request.formData();
+      username = formData.get('username') as string;
+      password = formData.get('password') as string;
     } else {
       // Try form data as default
       const formData = await request.formData();
@@ -62,9 +62,7 @@ export async function POST(request: NextRequest) {
 
     await session.save();
 
-    return NextResponse.redirect(new URL('/dashboard', request.url), {
-      status: 302,
-    });
+    return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(

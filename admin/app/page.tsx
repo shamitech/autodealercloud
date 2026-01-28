@@ -1,6 +1,6 @@
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
+import LoginForm from './components/LoginForm';
 
 export default async function Home() {
   const session = await getSession();
@@ -20,46 +20,7 @@ export default async function Home() {
             Auto Dealer Cloud Management
           </p>
 
-          <form action="/api/auth/login" method="POST" className="space-y-4">
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                Username
-              </label>
-              <input
-                type="text"
-                id="username"
-                name="username"
-                required
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                placeholder="Enter username"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                required
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                placeholder="Enter password"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              Sign In
-            </button>
-          </form>
-
-          <p className="mt-4 text-center text-sm text-gray-600">
-            Demo credentials: admin / admin123
-          </p>
+          <LoginForm />
         </div>
       </div>
     </main>
