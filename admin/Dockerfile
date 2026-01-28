@@ -3,6 +3,9 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Force rebuild on code changes
+ARG BUILD_ID=1
+
 # Copy package files
 COPY package*.json ./
 
