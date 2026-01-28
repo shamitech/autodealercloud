@@ -38,11 +38,15 @@ export async function POST(request: NextRequest) {
 
     // Validate credentials against the credentials file
     const adminCreds = credentials as Record<string, { username: string; password: string; email: string; role: string }>;
+    console.log('Attempting login with:', { username, password });
+    console.log('Available credentials:', adminCreds);
+    
     const user = Object.values(adminCreds).find(
       (u) => u.username === username && u.password === password
     );
 
     if (!user) {
+      console.log('No matching user found');
       return NextResponse.json(
         { error: 'Invalid username or password' },
         { status: 401 }
