@@ -28,11 +28,11 @@ RUN npm ci --only=production
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/node_modules ./node_modules
-COPY .env.local .env.local 2>/dev/null || true
 
 # Set environment
 ENV NODE_ENV=production
 ENV NEXTAUTH_URL=https://admin.autodealercloud.com
+ENV IRON_SESSION_PASSWORD=${IRON_SESSION_PASSWORD:-autodealercloud_admin_session_password_change_in_production_at_least_32_chars_long}
 
 # Expose port
 EXPOSE 3000
