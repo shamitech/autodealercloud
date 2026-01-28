@@ -6,23 +6,7 @@ import credentials from '@/lib/credentials.json';
 
 export async function POST(request: NextRequest) {
   try {
-    // Get content type to determine how to parse the request
-    const contentType = request.headers.get('content-type') || '';
-    
-    let username: string | null = null;
-    let password: string | null = null;
-
-    if (contentType.includes('application/json')) {
-      // Handle JSON data
-      const json = await request.json();
-      username = json.username;
-      password = json.password;
-    } else {
-      // Handle form data
-      const formData = await request.formData();
-      username = formData.get('username') as string;
-      password = formData.get('password') as string;
-    }
+    const { username, password } = await request.json();
 
     if (!username || !password) {
       return NextResponse.json(
@@ -31,27 +15,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate credentials against the credentials file
+    // Validate credentials
     const adminCreds = credentials as Record<string, { username: string; password: string; email: string; role: string }>;
-    console.log('Attempting login with:', { username, password });
-    console.log('Available credentials:', adminCreds);
-    
     const user = Object.values(adminCreds).find(
-      (u) => {
-        console.log(`Comparing: u.username="${u.username}" === username="${username}" && u.password="${u.password}" === password="${password}"`);
-        return u.username === username && u.password === password;
-      }
+      (u) => u.username === username && u.password === password
     );
 
     if (!user) {
-      console.log('No matching user found');
       return NextResponse.json(
         { error: 'Invalid username or password' },
         { status: 401 }
       );
     }
-
-    console.log('User found, creating session');
 
     // Create session
     const cookieStore = await cookies();
