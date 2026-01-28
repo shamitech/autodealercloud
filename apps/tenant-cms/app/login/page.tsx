@@ -14,19 +14,28 @@ export default function LoginPage() {
     setError('')
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const formData = new FormData()
+      formData.append('email', email)
+      formData.append('password', password)
+
+      const response = await fetch('/api/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: formData,
       })
 
-      const data = await response.json()
-
-      if (response.ok && data.token) {
-        localStorage.setItem('token', data.token)
+      if (response.ok) {
+        // Redirect to home page
         window.location.href = '/'
+      } else if (response.status === 302) {
+        // Handle redirect with error
+        const location = response.headers.get('location')
+        if (location) {
+          window.location.href = location
+        } else {
+          setError('Login failed')
+        }
       } else {
-        setError(data.error || 'Login failed')
+        setError('Login failed')
       }
     } catch (err) {
       setError('An error occurred during login')
