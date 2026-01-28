@@ -1,83 +1,37 @@
-import { headers } from 'next/headers'
+import { NextRequest, NextResponse } from 'next/server'
 
-export async function GET() {
-  return new Response('Not found', { status: 404 })
-}
-
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const formData = await request.formData()
-    const email = formData.get('email') as string
-    const password = formData.get('password') as string
-    const headersList = await headers()
-    const tenantId = headersList.get('x-tenant-id')
+    const { slug, password } = await request.json()
 
-    if (!email || !password) {
-      return new Response(null, {
-        status: 302,
-        headers: {
-          'Location': '/login?error=empty',
-        },
-      })
+    if (!slug || !password) {
+      return NextResponse.json({ error: 'Missing credentials' }, { status: 400 })
     }
 
-    if (!tenantId) {
-      // In production, extract from subdomain via middleware
-      return new Response(null, {
-        status: 302,
-        headers: {
-          'Location': '/login?error=tenant',
-        },
-      })
+    // Call backend API to validate password
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.autodealercloud.com'
+    const res = await fetch(`${apiUrl}/api/v1/tenant-login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug, password }),
+    })
+
+    const data = await res.json()
+
+    if (!res.ok) {
+      return NextResponse.json({ error: data.error || 'Invalid password' }, { status: 401 })
     }
 
-    try {
-      // Call the backend API to authenticate
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.autodealercloud.com'
-      const authResponse = await fetch(`${apiUrl}/api/v1/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          tenantId,
-        }),
-      })
-
-      if (!authResponse.ok) {
-        return new Response(null, {
-          status: 302,
-          headers: {
-            'Location': '/login?error=invalid',
-          },
-        })
-      }
-
-      const authData = await authResponse.json()
-
-      // Create session with auth token from API
-      const response = new Response(null, {
-        status: 302,
-        headers: {
-          'Location': '/',
-          'Set-Cookie': `auth=${authData.token}; Path=/; Secure; SameSite=Strict; Max-Age=86400`,
-        },
-      })
-      return response
-    } catch (apiError) {
-      console.error('API auth error:', apiError)
-      return new Response(null, {
-        status: 302,
-        headers: {
-          'Location': '/login?error=server',
-        },
-      })
-    }
+    return NextResponse.json({ 
+      sessionToken: data.sessionToken, 
+      tenantId: data.tenantId,
+      success: true 
+    })
   } catch (error: any) {
     console.error('Login error:', error)
-    return new Response(null, {
+    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+  }
+}
       status: 302,
       headers: {
         'Location': '/login?error=server',

@@ -318,6 +318,47 @@ app.put('/api/v1/tenants/:id', async (request: any) => {
   }
 })
 
+// Tenant login endpoint (validates password and returns session token)
+app.post('/api/v1/tenant-login', async (request: any, reply: any) => {
+  try {
+    const { slug, password } = request.body
+
+    if (!slug || !password) {
+      reply.status(400)
+      return { error: 'Missing slug or password' }
+    }
+
+    // Find tenant by slug
+    const tenant = await prisma.tenant.findUnique({
+      where: { slug },
+    })
+
+    if (!tenant) {
+      reply.status(401)
+      return { error: 'Tenant not found' }
+    }
+
+    // Validate password against tempPassword field
+    if (tenant.tempPassword !== password) {
+      reply.status(401)
+      return { error: 'Invalid password' }
+    }
+
+    // Generate session token (simple JWT)
+    const sessionToken = jwt.sign(
+      { tenantId: tenant.id, slug: tenant.slug },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    )
+
+    return { success: true, sessionToken, tenantId: tenant.id }
+  } catch (error: any) {
+    console.error('Tenant login error:', error)
+    reply.status(500)
+    return { error: error.message }
+  }
+})
+
 // Delete tenant (public for admin panel)
 app.delete('/api/v1/tenants/:id', async (request: any) => {
   try {
