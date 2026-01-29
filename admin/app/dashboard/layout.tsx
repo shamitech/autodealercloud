@@ -28,16 +28,10 @@ export default async function DashboardLayout({
             Dashboard
           </Link>
           <Link
-            href="/dashboard/users"
+            href="/dashboard/tenants"
             className="block rounded px-4 py-2 hover:bg-gray-800"
           >
-            Users
-          </Link>
-          <Link
-            href="/dashboard/settings"
-            className="block rounded px-4 py-2 hover:bg-gray-800"
-          >
-            Settings
+            Tenants
           </Link>
         </nav>
         <div className="absolute bottom-0 w-64 border-t border-gray-700 p-4">
