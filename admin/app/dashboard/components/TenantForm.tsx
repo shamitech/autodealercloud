@@ -105,8 +105,8 @@ export default function TenantForm({ onTenantCreated }: TenantFormProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-lg">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
         <h2 className="mb-4 text-2xl font-bold text-gray-900">Add New Tenant</h2>
 
         {error && (
